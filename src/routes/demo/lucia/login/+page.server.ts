@@ -78,7 +78,7 @@ export const actions: Actions = {
 			const session = await auth.createSession(sessionToken, userId);
 			auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
 		} catch (e) {
-			return fail(500, { message: 'An error has occurred' });
+			return fail(500, { message: 'An error has occurred' + e });
 		}
 		return redirect(302, '/demo/lucia');
 	}
@@ -101,5 +101,5 @@ function validateUsername(username: unknown): username is string {
 }
 
 function validatePassword(password: unknown): password is string {
-	return typeof password === 'string' && password.length >= 6 && password.length <= 255;
+	return typeof password === 'string' && password.length >= 1 && password.length <= 255;
 }

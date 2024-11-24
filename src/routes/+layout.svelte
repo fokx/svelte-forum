@@ -6,7 +6,6 @@
         BottomNavHeaderItem,
         BottomNavItem,
         Button,
-        CloseButton,
         Darkmode,
         Dropdown,
         DropdownFooter,
@@ -61,7 +60,8 @@
 <header class="sticky top-0 z-50 mx-auto w-full flex-none border-b border-gray-200 bg-gray-50 lg:pl-4 dark:border-gray-600 dark:bg-gray-950">
     <Navbar {navClass} hamburgerMenu={false} fluid div2Class="ml-auto w-full">
         {#snippet brand()}
-            <button onclick={demoSidebarUi.toggle} type="button" class="z-50 mr-4 mt-1 md:hidden" aria-controls="sidebar"
+            <button onclick={demoSidebarUi.toggle} type="button" class="z-50 mr-4 mt-1 md:hidden"
+                    aria-controls="sidebar"
                     aria-expanded={isDemoOpen}>
                 <span class="sr-only">Toggle sidebar menu</span>
                 <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -76,7 +76,7 @@
         {/snippet}
         {#snippet navSlotBlock()}
             <div class="flex items-center space-x-1 order-2">
-                <Button class="me-1 rounded-lg bg-white p-2.5 text-sm text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 lg:hidden dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-700">
+                <Button class="me-1 rounded-lg bg-white p-2.5 text-sm text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 lg:hidden dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700">
                     <SearchOutline class="h-5 w-5"/>
                 </Button>
                 <div class="relative hidden lg:block">
@@ -130,41 +130,34 @@
              activeClass="flex items-center p-1 text-base font-normal text-white dark:hover:text-white hover:text-gray-900 bg-primary-700 dark:bg-primary-700 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
              nonActiveClass="p-1 hover:bg-gray-200" divClass="dark:bg-gray-900 bg-gray-50"
              class="top-[62px] h-screen dark:bg-gray-900">
-        <CloseButton onclick={closeDemoSidebar} color="gray" class="absolute right-0.5 top-0.5 p-0 md:hidden"/>
         <SidebarGroup>
-
             <SidebarDropdownWrapper label="Shop" btnClass="p-2">
                 {#snippet iconSlot()}
-                    <ShoppingBagSolid
-                            class="h-5 w-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"/>
+                    <ShoppingBagSolid/>
                 {/snippet}
                 <SidebarItem label="Products" href=""/>
             </SidebarDropdownWrapper>
             <SidebarItem label="Dashboard">
                 {#snippet iconSlot()}
-                    <ChartOutline
-                            class="h-5 w-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"/>
+                    <ChartOutline/>
                 {/snippet}
             </SidebarItem>
             <SidebarDropdownWrapper label="Profile" btnClass="p-2">
                 {#snippet iconSlot()}
-                    <UserSolid
-                            class="h-5 w-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"/>
+                    <UserSolid/>
                 {/snippet}
                 <SidebarItem label="Projects" href="/"/>
             </SidebarDropdownWrapper>
             <SidebarItem label="Sidebar" {spanClass} href="/components/sidebar">
                 {#snippet iconSlot()}
-                    <GridSolid
-                            class="h-5 w-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"/>
+                    <GridSolid/>
                 {/snippet}
             </SidebarItem>
         </SidebarGroup>
         <SidebarGroup border>
             <SidebarDropdownWrapper label="Setting" btnClass="p-2">
                 {#snippet iconSlot()}
-                    <EditSolid
-                            class="h-5 w-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"/>
+                    <EditSolid/>
                 {/snippet}
                 <SidebarItem label="Account" href=""/>
             </SidebarDropdownWrapper>

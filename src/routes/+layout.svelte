@@ -56,6 +56,11 @@
     });
     let navClass = "w-full divide-gray-200 border-gray-200 bg-gray-50 dark_bg_theme text-gray-500 dark:divide-gray-700 dark:border-gray-700 dark:transparent dark:text-gray-400 sm:px-4";
 
+    function toggleDarkMode(event) {
+        let target = event.target;
+        let child = target.querySelector('.darkmode-button-in-avatar-dropdown');
+        child?.click();
+    }
 </script>
 <header class="sticky top-0 z-50 mx-auto w-full flex-none border-b border-gray-200 bg-gray-50 lg:pl-4 dark:border-gray-600 dark:bg-gray-950">
     <Navbar {navClass} hamburgerMenu={false} fluid div2Class="ml-auto w-full">
@@ -87,7 +92,7 @@
                 </div>
             </div>
             <div class="flex items-center space-x-1 order-3">
-                <Darkmode class="hidden sm:block"/>
+                <Darkmode class="hidden lg:block"/>
             </div>
             <div class="flex items-center space-x-1 order-4">
                 <Avatar class="rotate-90 me-1 ms-3" onclick={dropdownUser.toggle} src="/images/svelte-icon.png"
@@ -106,7 +111,10 @@
                             <DropdownLi href="/components/footer">Footer</DropdownLi>
                             <DropdownLi href="/components">Alert</DropdownLi>
                             <DropdownLi>
-                                <Darkmode class="text-primary-500 dark:border-gray-800 dark:text-primary-600"/>
+                                <button class="lg:hidden w-full text-left" onclick={event => toggleDarkMode(event)}>
+                                    <Darkmode
+                                            class="darkmode-button-in-avatar-dropdown"/>
+                                </button>
                             </DropdownLi>
                         </DropdownUl>
                         <DropdownFooter class="px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600">Sign out
@@ -127,8 +135,8 @@
 
 <div class="lg:flex" id="sidebar">
     <Sidebar {activeUrl} isSingle={false} backdrop={false} isOpen={isDemoOpen} closeSidebar={closeDemoSidebar}
-             activeClass="flex items-center p-1 text-base font-normal text-white dark:hover:text-white hover:text-gray-900 bg-primary-700 dark:bg-primary-700 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
-             nonActiveClass="p-1 hover:bg-gray-200" divClass="dark:bg-gray-900 bg-gray-50"
+             activeClass="flex items-center p-1 text-base font-normal text-white dark_bg_theme dark:hover:text-white hover:text-gray-900 bg-primary-700 rounded-lg dark:divide-gray-700 dark:border-gray-700 dark:transparent dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+             nonActiveClass="p-1 hover:bg-gray-200" divClass="bg-gray-50"
              class="top-[62px] h-screen dark:bg-gray-900">
         <SidebarGroup>
             <SidebarDropdownWrapper label="Shop" btnClass="p-2">

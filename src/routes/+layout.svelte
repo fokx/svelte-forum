@@ -6,10 +6,7 @@
         BottomNavHeaderItem,
         BottomNavItem,
         Button,
-        Darkmode,
         Dropdown,
-        DropdownFooter,
-        DropdownHeader,
         DropdownLi,
         DropdownUl,
         Input,
@@ -17,27 +14,30 @@
         NavBrand,
         NavLi,
         NavUl,
-        Sidebar,
-        SidebarDropdownWrapper,
         SidebarGroup,
         SidebarItem,
-        uiHelpers
+        DropdownFooter,
+        uiHelpers,
+        SidebarDropdownWrapper,
+        Darkmode,
+        Sidebar,
+        DropdownHeader
     } from 'svelte-5-ui-lib';
-    import {
-        AdjustmentsVerticalOutline,
-        BookmarkSolid,
-        ChartOutline,
-        EditSolid,
-        GridSolid,
-        HomeSolid,
-        PlusOutline,
-        SearchOutline,
-        ShoppingBagSolid,
-        UserSolid
-    } from "flowbite-svelte-icons";
     import {page} from '$app/stores';
     import {sineIn} from "svelte/easing";
     import '../app.css';
+    import {
+        BookmarkFill,
+        CardList,
+        ChatLeftDots,
+        GraphUp,
+        HouseDoorFill,
+        PencilSquare,
+        PersonFill,
+        Plus,
+        Search,
+        Sliders2Vertical
+    } from 'svelte-bootstrap-svg-icons';
 
     let {children, data} = $props();
     let activeUrl = $state($page.url.pathname);
@@ -82,11 +82,11 @@
         {#snippet navSlotBlock()}
             <div class="flex items-center space-x-1 order-2">
                 <Button class="me-1 rounded-lg bg-white p-2.5 text-sm text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 lg:hidden dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700">
-                    <SearchOutline class="h-5 w-5"/>
+                    <Search class="h-5 w-5"/>
                 </Button>
                 <div class="relative hidden lg:block">
                     <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
-                        <SearchOutline class="h-4 w-4"/>
+                        <Search class="h-4 w-4"/>
                     </div>
                     <Input id="search-navbar" class="bg-transparent ps-10" placeholder="Search..."/>
                 </div>
@@ -102,14 +102,13 @@
                               params={{ y: 0, duration: 200, easing: sineIn }}
                               class="absolute -left-[110px] top-[14px] md:-left-[160px] ">
                         <DropdownHeader class="px-4 py-2">
-                            <span class="block text-sm text-gray-900 dark:text-white">Bonnie Green</span>
-                            <span class="block truncate text-sm font-medium">name@flowbite.com</span>
+                            <span class="block text-sm text-gray-900 dark:text-white">Your Username</span>
+                            <span class="block truncate text-sm font-medium">or something else</span>
                         </DropdownHeader>
                         <DropdownUl>
-                            <DropdownLi href="/">Dashboard</DropdownLi>
-                            <DropdownLi href="/components/drawer">Drawer</DropdownLi>
-                            <DropdownLi href="/components/footer">Footer</DropdownLi>
-                            <DropdownLi href="/components">Alert</DropdownLi>
+                            <DropdownLi href="/">Home</DropdownLi>
+                            <DropdownLi href="/DropdownLi1">DropdownLi1</DropdownLi>
+                            <DropdownLi href="/DropdownL2">DropdownLi2</DropdownLi>
                             <DropdownLi>
                                 <button class="lg:hidden w-full text-left" onclick={event => toggleDarkMode(event)}>
                                     <Darkmode
@@ -127,8 +126,8 @@
         <!--only show NavUl on desktop, no NavHamburger on mobile-->
         <NavUl class="order-1 me-1 ms-1" {activeUrl}>
             <NavLi href="/">Home</NavLi>
-            <NavLi href="/components/navbar">Navbar</NavLi>
-            <NavLi href="/components/footer">Footer</NavLi>
+            <NavLi href="/NavLi1">NavLi1</NavLi>
+            <NavLi href="/NavLi2">NavLi2</NavLi>
         </NavUl>
     </Navbar>
 </header>
@@ -139,37 +138,37 @@
              nonActiveClass="p-1 hover:bg-gray-200" divClass="bg-gray-50"
              class="top-[62px] h-screen dark:bg-gray-900">
         <SidebarGroup>
-            <SidebarDropdownWrapper label="Shop" btnClass="p-2">
+            <SidebarItem label="Compose" href="/compose">
                 {#snippet iconSlot()}
-                    <ShoppingBagSolid/>
-                {/snippet}
-                <SidebarItem label="Products" href=""/>
-            </SidebarDropdownWrapper>
-            <SidebarItem label="Dashboard">
-                {#snippet iconSlot()}
-                    <ChartOutline/>
+                    <PencilSquare/>
                 {/snippet}
             </SidebarItem>
-            <SidebarDropdownWrapper label="Profile" btnClass="p-2">
+            <SidebarDropdownWrapper label="My ..." isOpen={true}>
                 {#snippet iconSlot()}
-                    <UserSolid/>
+                    <PersonFill/>
                 {/snippet}
-                <SidebarItem label="Projects" href="/"/>
+                <SidebarItem label="Posts" href="/my/posts" class="pl-4">
+                    {#snippet iconSlot()}
+                        <CardList/>
+                    {/snippet}
+                </SidebarItem>
+                <SidebarItem label="Replies to me" href="/my/replies-to-me" class="pl-4">
+                    {#snippet iconSlot()}
+                        <ChatLeftDots/>
+                    {/snippet}
+                </SidebarItem>
             </SidebarDropdownWrapper>
-            <SidebarItem label="Sidebar" {spanClass} href="/components/sidebar">
-                {#snippet iconSlot()}
-                    <GridSolid/>
-                {/snippet}
-            </SidebarItem>
         </SidebarGroup>
+
         <SidebarGroup border>
-            <SidebarDropdownWrapper label="Setting" btnClass="p-2">
+            <SidebarItem label="Community" href="/community">
                 {#snippet iconSlot()}
-                    <EditSolid/>
+                    <GraphUp/>
                 {/snippet}
-                <SidebarItem label="Account" href=""/>
-            </SidebarDropdownWrapper>
+            </SidebarItem>
+
         </SidebarGroup>
+
     </Sidebar>
 
     <main class="mx-auto min-w-0 max-w-7xl flex-auto px-8 pb-20 lg:static lg:max-h-full overflow-auto md:pl-72">
@@ -188,24 +187,24 @@
             <BottomNavHeaderItem itemName="Following"/>
         </BottomNavHeader>
     {/snippet}
-    <BottomNavItem btnName="Home">
-        <HomeSolid
-                class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
-    </BottomNavItem>
     <BottomNavItem btnName="Bookmark">
-        <BookmarkSolid
+        <BookmarkFill
                 class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
     </BottomNavItem>
-    <BottomNavItem btnName="New post">
-        <PlusOutline
+    <BottomNavItem btnName="Home" href="/community">
+        <HouseDoorFill
+                class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
+    </BottomNavItem>
+    <BottomNavItem btnName="New post" href="/compose">
+        <Plus
                 class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
     </BottomNavItem>
     <BottomNavItem btnName="Search">
-        <SearchOutline
+        <Search
                 class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
     </BottomNavItem>
     <BottomNavItem btnName="Settings">
-        <AdjustmentsVerticalOutline
+        <Sliders2Vertical
                 class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
     </BottomNavItem>
 </BottomNav>

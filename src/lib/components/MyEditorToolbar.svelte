@@ -81,10 +81,10 @@
         <SuperscriptDropDownItem />
         <ClearFormattingDropDownItem />
       </MoreStylesDropDown>
+      <FontFamilyDropDown />
+      <!-- <FontSizeDropDown /> -->
+      <FontSizeEntry />
     {/if}
-    <FontFamilyDropDown />
-    <!-- <FontSizeDropDown /> -->
-    <FontSizeEntry />
     <DropDownAlign />
     <InsertImageDialog bind:this={imageDialog} />
     <InsertColumnsDialog bind:this={columnsDialog} />

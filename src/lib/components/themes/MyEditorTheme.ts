@@ -8,7 +8,7 @@
 
 import type {EditorThemeClasses} from 'svelte-lexical';
 
-import './PlaygroundEditorTheme.css';
+import './MyEditorTheme.css';
 
 const theme: EditorThemeClasses = {
   autocomplete: 'PlaygroundEditorTheme__autocomplete',

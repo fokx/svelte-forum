@@ -1922,3 +1922,7 @@ button.toolbar-item.sl_font-increment {
 }
 
 /* END: Font Size Entry */
+.actionbar {
+    display: flex;
+    justify-content: flex-end;
+}

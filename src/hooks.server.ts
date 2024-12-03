@@ -3,7 +3,7 @@ import {
 	type DiscourseUserFromCookie,
 	GetUserApiKeyCreateIfNotExists,
 	ReadDiscourseUser
-} from '$lib/discourse';
+} from '$lib/server/discourse';
 import { DISCOURSE_COOKIE_NAME } from '$env/static/private';
 
 const handleAuth: Handle = async ({ event, resolve }) => {
@@ -26,18 +26,18 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 	//
 	// return resolve(event);
 
-	// if (!event.locals.user) {
-	// 	const ext_cookie = event.cookies.get(DISCOURSE_COOKIE_NAME);
-	// 	if (ext_cookie) {
-	// 		const user: DiscourseUserFromCookie | undefined = await ReadDiscourseUser(ext_cookie);
-	// 		event.locals.user = user;
-	// 		if (user) {w
-	// 			if (!event.locals.api_key) {
-	// 				event.locals.api_key = await GetUserApiKeyCreateIfNotExists(user.id);
-	// 			}
-	// 		}
-	// 	}
-	// }
+	if (!event.locals.user) {
+		const ext_cookie = event.cookies.get(DISCOURSE_COOKIE_NAME);
+		if (ext_cookie && ext_cookie !== '') {
+			const user: DiscourseUserFromCookie | undefined = await ReadDiscourseUser(ext_cookie);
+			event.locals.user = user;
+			if (user) {
+				if (event.locals.api_key === undefined) {
+					event.locals.api_key = await GetUserApiKeyCreateIfNotExists(user.id);
+				}
+			}
+		}
+	}
 	return resolve(event);
 };
 

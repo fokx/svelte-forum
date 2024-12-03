@@ -1,15 +1,10 @@
 import crypto from 'crypto';
 import 'dotenv/config';
-import urlJoin from 'url-join';
-import {
-	DISCOURSE_ADMIN_API_KEY,
-	DISCOURSE_ADMIN_API_KEY_USERNAME,
-	DISCOURSE_COOKIE_KEY,
-	DISCOURSE_HOST
-} from '$env/static/private';
+import { DISCOURSE_ADMIN_API_KEY_USERNAME, DISCOURSE_COOKIE_KEY } from '$env/static/private';
 import { db } from '$lib/server/db';
 import { discourseApiKeys, users } from '$lib/server/db/schema';
-import { and, eq, ne } from 'drizzle-orm'; // import { users,discourseApiKeys} from "$lib/server/db/schema";
+import { eq } from 'drizzle-orm';
+import { admin_get_url, post_url } from '$lib'; // import { users,discourseApiKeys} from "$lib/server/db/schema";
 
 // import { users,discourseApiKeys} from "$lib/server/db/schema";
 export interface DiscourseUserFromCookie {
@@ -60,16 +55,9 @@ export function ReadDiscourseUser(cookie_text: string): DiscourseUserFromCookie 
 export async function GetDiscourseUserNameInsertIfNotExist(user_id: number) {
 	console.log(user_id);
 	console.log(DISCOURSE_ADMIN_API_KEY_USERNAME);
-	let response = await fetch(urlJoin(DISCOURSE_HOST, '/admin/users/' + user_id + '.json'), {
-		headers: {
-			'Api-Key': DISCOURSE_ADMIN_API_KEY,
-			'Api-Username': DISCOURSE_ADMIN_API_KEY_USERNAME
-		}
-	});
-
-	response = await response.json();
-
-	console.log(response);
+	const response: DiscourseUserFromCookie = await admin_get_url(
+		'/admin/users/' + user_id + '.json'
+	);
 	if (response) {
 		const userValues = {
 			id: response.id,
@@ -90,13 +78,10 @@ export async function GetDiscourseUserNameInsertIfNotExist(user_id: number) {
 			updatedAt: new Date(response.updated_at)
 		};
 
-		await db
-			.insert(users)
-			.values(userValues)
-			.onConflictDoUpdate({
-				target: users.id,
-				set: userValues
-			});
+		await db.insert(users).values(userValues).onConflictDoUpdate({
+			target: users.id,
+			set: userValues
+		});
 		return response.username;
 	} else {
 		console.log(response);
@@ -106,18 +91,7 @@ export async function GetDiscourseUserNameInsertIfNotExist(user_id: number) {
 
 export async function CreateDiscourseUserApiKey(user_id: number) {
 	const username = await GetDiscourseUserNameInsertIfNotExist(user_id);
-	let response = await fetch(urlJoin(DISCOURSE_HOST, '/admin/api/keys'), {
-		headers: {
-			'Api-Key': DISCOURSE_ADMIN_API_KEY,
-			'Api-Username': DISCOURSE_ADMIN_API_KEY_USERNAME,
-			'Content-Type': 'application/json'
-		},
-		body: `{"key":{"description":"user-api-key","username":"${username}"}}`,
-		method: 'POST'
-	});
-	console.log(urlJoin(DISCOURSE_HOST, '/admin/api/keys'));
-	response = await response.json();
-	console.log(response);
+	const response = post_url('/admin/api/keys', username);
 	if (response) {
 		const key = response.key;
 
@@ -141,10 +115,10 @@ export async function GetUserApiKeyCreateIfNotExists(user_id: number) {
 	const result = await db
 		.select()
 		.from(discourseApiKeys)
-		.where(and(eq(discourseApiKeys.userId, user_id), ne(discourseApiKeys.revokedAt, null)))
+		.where(eq(discourseApiKeys.userId, user_id))
 		.limit(1);
 	if (result.length) {
-		return result[0].apiKey;
+		return result[0].key;
 	} else {
 		return await CreateDiscourseUserApiKey(user_id);
 	}

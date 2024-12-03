@@ -14,7 +14,8 @@
     CodeDropDrownItem,
     CodeLanguageDropDown,
     FontFamilyDropDown,
-    // FontSizeDropDown,
+    FontSizeDropDown,
+    ToggleMarkdownButton,
     FontSizeEntry,
     BoldButton,
     ItalicButton,
@@ -45,6 +46,7 @@
   {#snippet children({ editor, activeEditor, blockType })}
     <UndoButton />
     <RedoButton />
+    <ToggleMarkdownButton />
     {#if activeEditor === editor}
       <BlockFormatDropDown>
         <ParagraphDropDownItem />
@@ -82,9 +84,8 @@
         <ClearFormattingDropDownItem />
       </MoreStylesDropDown>
       <FontFamilyDropDown />
-      <!-- <FontSizeDropDown /> -->
-      <FontSizeEntry />
     {/if}
+    <FontSizeEntry />
     <DropDownAlign />
     <InsertImageDialog bind:this={imageDialog} />
     <InsertColumnsDialog bind:this={columnsDialog} />

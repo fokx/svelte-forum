@@ -1447,10 +1447,11 @@ button.action-button:disabled {
     border-top-right-radius: 10px;
     vertical-align: middle;
     overflow: auto;
-    height: 36px;
+    /*height: 36px;*/
     position: sticky;
     top: 0;
     z-index: 2;
+    height: auto;
 }
 
 button.toolbar-item {
@@ -1887,7 +1888,7 @@ button.item.dropdown-item-active i {
 /* START: Font Size Entry */
 .sl_font-size-input {
     font-weight: bold;
-    font-size: 14px;
+    font-size: 8px;
     color: #777;
     border-radius: 5px;
     border-color: grey;

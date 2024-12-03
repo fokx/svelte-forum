@@ -42,7 +42,7 @@
 		QuoteNode,
 		RichTextPlugin,
 		SharedHistoryPlugin,
-		ToolbarRichText,
+		// ToolbarRichText,
 		TreeViewPlugin,
 		validateUrl
 	} from 'svelte-lexical';

@@ -4,7 +4,7 @@
     UndoButton,
     RedoButton,
     Toolbar,
-    Divider,
+    // Divider,
     ParagraphDropDownItem,
     HeadingDropDownItem,
     BulletDropDrownItem,
@@ -45,7 +45,6 @@
   {#snippet children({ editor, activeEditor, blockType })}
     <UndoButton />
     <RedoButton />
-    <Divider />
     {#if activeEditor === editor}
       <BlockFormatDropDown>
         <ParagraphDropDownItem />
@@ -58,19 +57,21 @@
         <QuoteDropDrownItem />
         <CodeDropDrownItem />
       </BlockFormatDropDown>
-      <Divider />
     {/if}
     {#if blockType === 'code'}
       <CodeLanguageDropDown />
     {:else}
-      <FontFamilyDropDown />
-      <!-- <FontSizeDropDown /> -->
-      <FontSizeEntry />
-      <Divider />
       <BoldButton />
       <ItalicButton />
       <UnderlineButton />
       <FormatCodeButton />
+      {#if activeEditor === editor}
+        <InsertDropDown>
+          <InsertHRDropDownItem />
+          <InsertImageDropDownItem on:click={() => imageDialog.open()} />
+          <InsertColumnLayoutDropDownItem on:click={() => columnsDialog.open()} />
+        </InsertDropDown>
+      {/if}
       <DropDownTextColorPicker />
       <DropDownBackColorPicker />
       <InsertLink />
@@ -80,18 +81,11 @@
         <SuperscriptDropDownItem />
         <ClearFormattingDropDownItem />
       </MoreStylesDropDown>
-      <Divider />
-      {#if activeEditor === editor}
-        <InsertDropDown>
-          <InsertHRDropDownItem />
-          <InsertImageDropDownItem on:click={() => imageDialog.open()} />
-          <InsertColumnLayoutDropDownItem on:click={() => columnsDialog.open()} />
-        </InsertDropDown>
-        <Divider />
-      {/if}
     {/if}
+    <FontFamilyDropDown />
+    <!-- <FontSizeDropDown /> -->
+    <FontSizeEntry />
     <DropDownAlign />
-    <!-- dialogs -->
     <InsertImageDialog bind:this={imageDialog} />
     <InsertColumnsDialog bind:this={columnsDialog} />
   {/snippet}

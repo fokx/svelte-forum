@@ -1,10 +1,10 @@
 import crypto from 'crypto';
 import 'dotenv/config';
-import { DISCOURSE_ADMIN_API_KEY_USERNAME, DISCOURSE_COOKIE_KEY } from '$env/static/private';
+import { DISCOURSE_COOKIE_KEY } from '$env/static/private';
 import { db } from '$lib/server/db';
 import { discourseApiKeys, users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { admin_get_url, post_url } from '$lib'; // import { users,discourseApiKeys} from "$lib/server/db/schema";
+import { admin_get_url, create_api_key } from '$lib/server'; // import { users,discourseApiKeys} from "$lib/server/db/schema";
 
 // import { users,discourseApiKeys} from "$lib/server/db/schema";
 export interface DiscourseUserFromCookie {
@@ -53,11 +53,7 @@ export function ReadDiscourseUser(cookie_text: string): DiscourseUserFromCookie 
 }
 
 export async function GetDiscourseUserNameInsertIfNotExist(user_id: number) {
-	console.log(user_id);
-	console.log(DISCOURSE_ADMIN_API_KEY_USERNAME);
-	const response: DiscourseUserFromCookie = await admin_get_url(
-		'/admin/users/' + user_id + '.json'
-	);
+	const response: DiscourseUserFromCookie = await admin_get_url(`/admin/users/${user_id}.json`);
 	if (response) {
 		const userValues = {
 			id: response.id,
@@ -84,14 +80,13 @@ export async function GetDiscourseUserNameInsertIfNotExist(user_id: number) {
 		});
 		return response.username;
 	} else {
-		console.log(response);
 		throw new Error('cannot get username for user ' + user_id);
 	}
 }
 
 export async function CreateDiscourseUserApiKey(user_id: number) {
 	const username = await GetDiscourseUserNameInsertIfNotExist(user_id);
-	const response = post_url('/admin/api/keys', username);
+	const response = await create_api_key('/admin/api/keys', username);
 	if (response) {
 		const key = response.key;
 

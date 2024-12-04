@@ -1,30 +1,37 @@
-// place files you want to import through the `$lib` alias in this folder.
 import urlJoin from 'url-join';
-import {
-	DISCOURSE_ADMIN_API_KEY,
-	DISCOURSE_ADMIN_API_KEY_USERNAME,
-	DISCOURSE_HOST
-} from '$env/static/private';
 
-export async function post_url(url: string, username: string) {
-	const response = await fetch(urlJoin(DISCOURSE_HOST, url), {
-		headers: {
-			'Api-Key': DISCOURSE_ADMIN_API_KEY,
-			'Api-Username': DISCOURSE_ADMIN_API_KEY_USERNAME,
-			'Content-Type': 'application/json'
-		},
-		body: `{"key":{"description":"user-api-key","username":"${username}"}}`,
+import { PUBLIC_DISCOURSE_HOST } from '$env/static/public';
+
+export async function post_url(
+	url: string,
+	body: string,
+
+	api_username: string = '',
+api_key: string = '',
+
+) {
+	const headers = {
+		'Content-Type': 'application/json'
+	};
+	if (api_key) {
+		headers['Api-Key'] = api_key;
+		headers['Api-Username'] = api_username;
+	}
+	const response = await window.fetch(urlJoin(PUBLIC_DISCOURSE_HOST, url), {
+		headers: headers,
+		body: body,
 		method: 'POST'
+		// referrerPolicy: 'no-referrer'
 	});
-
-	return await response.json();
+	return response;
 }
 
-export async function admin_get_url(url: string) {
-	const response = await fetch(urlJoin(DISCOURSE_HOST, url), {
+export async function get_url(url: string, api_key: string, api_username: string) {
+	const response = await fetch(urlJoin(PUBLIC_DISCOURSE_HOST, url), {
 		headers: {
-			'Api-Key': DISCOURSE_ADMIN_API_KEY,
-			'Api-Username': DISCOURSE_ADMIN_API_KEY_USERNAME
+			'Api-Key': api_key,
+			'Api-Username': api_username,
+			Accept: 'application/json'
 		}
 	});
 

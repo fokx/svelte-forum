@@ -1,8 +1,0 @@
-#!/bin/zsh
-host=mnz
-rsync -av --delete /f/svelte-forum $host:/srv/ --exclude={"*.db","node_modules/*","src/lib/server/db/sqlite.db","build/*",".svelte-kit"}
-ssh $host chown -R forum:forum /srv/svelte-forum
-
-cd /srv/svelte-forum; pnpm i && pnpm run build && pnpm push:db && lsof -i :4002|tail -1|awk '{print $2}'|xargs kill; HOST=127.0.0.1 PORT=4002 node build
-
-ApiKey.where(description: "user-api-key").destroy_all

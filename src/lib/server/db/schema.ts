@@ -1,6 +1,8 @@
 import { integer, sqliteTable, sqliteView, text } from 'drizzle-orm/sqlite-core';
 import { eq, relations } from 'drizzle-orm';
 import { generateRandomString } from '@oslojs/crypto/random';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 const random = {
 	read(bytes: never) {

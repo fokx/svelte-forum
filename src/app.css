@@ -10,7 +10,7 @@
  *
  */
 
-@import 'https://fonts.googleapis.com/css?family=Reenie+Beanie';
+/*@import 'https://fonts.googleapis.com/css?family=Reenie+Beanie';*/
 
 /*body {*/
 /*    margin: 0;*/
@@ -1577,7 +1577,7 @@ button.toolbar-item.active i {
     padding: 20px 10px;
     position: relative;
     border: 1px solid #e8e8e8;
-    font-family: 'Reenie Beanie';
+    /*font-family: 'Reenie Beanie';*/
     font-size: 24px;
     border-bottom-right-radius: 60px 5px;
     display: block;

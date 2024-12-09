@@ -1,20 +1,31 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Textarea } from 'svelte-5-ui-lib';
+	import { Label, Select, Textarea } from 'svelte-5-ui-lib';
 	import type { LexicalEditor } from 'svelte-lexical';
-	import { getEditor, PLAYGROUND_TRANSFORMERS, convertToMarkdownString } from 'svelte-lexical';
+	import { convertToMarkdownString, getEditor, PLAYGROUND_TRANSFORMERS } from 'svelte-lexical';
 	import RichTextComposer from '$lib/components/MyRichTextComposer.svelte';
 	// import {RichTextComposer} from 'svelte-lexical';
 	import type { PageData } from './$types';
 	import '../../app.css';
 	import { Send } from 'svelte-bootstrap-svg-icons';
-	import { post_url } from '$lib';
+	import { get_url, post_url } from '$lib';
+	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 	let title = $state('');
+	let category = $state(4);
+
+	async function get_categories() {
+		let response = await get_url(data.user.username, data.api_key, '/categories.json');
+		if (response.status === 200) {
+			response = await response.json();
+			console.log(response);
+			let categories = response.category_list.categories;
+			return categories;
+		}
+	}
 
 	let composerComponent;
-
 	const editor: LexicalEditor = getEditor();
 	// onMount(() => {
 	// 	const editor = composerComponent.getEditor();
@@ -39,16 +50,18 @@
 		let body = {
 			'title': title,
 			'raw': markdown,
-			'category': 3, // 3: admin only
+			'category': 3 // 3: admin only
 			// 'category': 4, // 4: general
 		};
 
-		let response = await post_url('/posts.json', JSON.stringify(body), data.user.username, data.api_key);
+		let response = await post_url(data.user.username, data.api_key, '/posts.json', JSON.stringify(body));
 		console.log(response);
 		if (response.status === 200) {
 			alert('Post submitted successfully!');
 			response = await response.json();
 			console.log(response);
+			console.log(response.cooked);
+			goto(`/t/${response.topic_slug}/${response.topic_id}`);
 		} else {
 			alert('Failed to submit post!');
 		}
@@ -68,6 +81,24 @@
 							placeholder="Your post title..." />
 	</div>
 </form>
+
+<div>
+	<Label for="categories">Select post category</Label>
+	<Select id="categories" class="mt-2" bind:value={category} placeholder="">
+		<option selected value={category}>Default</option>
+		{#await get_categories()}
+			<p>Post to default category</p>
+		{:then categories}
+			{#each categories as cat}
+				<option value={cat.id} style="color:#{cat.color}">{cat.name}</option>
+			{/each}
+		{:catch error}
+			<p style="color: red">can not fetch category info: {error.message}</p>
+		{/await}
+	</Select>
+</div>
+
+
 <RichTextComposer bind:this={composerComponent} />
 <div class="actionbar">
 	<!--				<ImportButton />-->

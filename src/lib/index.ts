@@ -3,12 +3,10 @@ import urlJoin from 'url-join';
 import { PUBLIC_DISCOURSE_HOST } from '$env/static/public';
 
 export async function post_url(
-	url: string,
-	body: string,
-
 	api_username: string = '',
-api_key: string = '',
-
+	api_key: string = '',
+	url: string,
+	body: string
 ) {
 	const headers = {
 		'Content-Type': 'application/json'
@@ -26,14 +24,15 @@ api_key: string = '',
 	return response;
 }
 
-export async function get_url(url: string, api_key: string, api_username: string) {
-	const response = await fetch(urlJoin(PUBLIC_DISCOURSE_HOST, url), {
+export async function get_url(api_username: string, api_key: string, url: string, params = {}) {
+	let u = new URL(urlJoin(PUBLIC_DISCOURSE_HOST, url));
+	u.search = new URLSearchParams(params);
+	console.log(u.toString());
+	const response = await fetch(u, {
 		headers: {
 			'Api-Key': api_key,
-			'Api-Username': api_username,
-			Accept: 'application/json'
+			'Api-Username': api_username
 		}
 	});
-
-	return await response.json();
+	return response;
 }

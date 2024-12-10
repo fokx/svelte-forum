@@ -167,7 +167,7 @@
 
     </Sidebar>
 
-    <main class="mx-auto min-w-0 max-w-7xl flex-auto px-8 pb-20 lg:static lg:max-h-full overflow-auto md:pl-72">
+    <main class="mx-auto min-w-0 max-w-8xl flex-auto px-8 pb-20 lg:static lg:max-h-full overflow-auto md:pl-72">
         <div id="mainContent">
             {@render children()}
         </div>

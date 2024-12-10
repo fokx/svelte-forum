@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Label, Select, Textarea } from 'svelte-5-ui-lib';
+	import { Label, Textarea, Select, Skeleton, ImagePlaceholder } from 'svelte-5-ui-lib';
 	import type { LexicalEditor } from 'svelte-lexical';
 	import { convertToMarkdownString, getEditor, PLAYGROUND_TRANSFORMERS } from 'svelte-lexical';
 	import RichTextComposer from '$lib/components/MyRichTextComposer.svelte';
@@ -9,12 +9,14 @@
 	import '../../app.css';
 	import Send from 'svelte-bootstrap-svg-icons/Send.svelte';
 	import { get_url, post_url } from '$lib';
-	import { dbd } from '$lib/dbd';
 	import { goto } from '$app/navigation';
 	import { PUBLIC_MAX_TITLE_LENGTH } from '$env/static/public';
+	import { dbd } from '$lib/dbd';
 
 	let { data }: { data: PageData } = $props();
 	let title = $state('');
+	// 3: admin only
+	// 4: general
 	const DEFAULT_CATEGORY_ID = 4;
 	let category = $state(DEFAULT_CATEGORY_ID);
 
@@ -65,22 +67,45 @@
 			);
 		});
 		if (!title || !markdown) {
+			alert('Title or content is empty!');
 			return;
 		}
 		let body = {
 			'title': title,
 			'raw': markdown,
-			'category': category // 3: admin only
-			// 'category': 4, // 4: general
+			'category': category
 		};
 
 		let response = await post_url(data.user.username, data.api_key, '/posts.json', JSON.stringify(body));
 		if (response.status === 200) {
 			alert('Post submitted successfully!');
 			response = await response.json();
+			console.log(response);
+			dbd.posts.add({
+				id: response?.id,
+				raw: response?.raw,
+				cooked: response?.cooked,
+				post_number: response?.post_number,
+				topic_id: response?.topic_id,
+				user_id: response?.user_id,
+				reply_to_post_number: response?.reply_to_post_number,
+				reply_count: response?.reply_count,
+				created_at: response?.created_at,
+				deleted_at: response?.deleted_at,
+				updated_at: response?.updated_at,
+				// the following fields are not in the response
+				reply_to_user_id: response?.reply_to_user_id,
+				like_count: response?.like_count,
+				word_count: response?.word_count,
+				deleted: response?.deleted,
+				is_main_post: response?.is_main_post,
+				main_post_id: response?.main_post_id,
+				reply_to_post_id: response?.reply_to_post_id,
+			});
 			goto(`/t/${response.topic_slug}/${response.topic_id}`);
 		} else {
 			alert('Failed to submit post!');
+			console.log(response);
 		}
 	}
 
@@ -93,11 +118,11 @@
 		<Textarea bind:value={title} id="title" class="bg-white dark:bg-gray-800 w-full" rows={1}
 							placeholder="Your post title (max {PUBLIC_MAX_TITLE_LENGTH})..." maxlength={PUBLIC_MAX_TITLE_LENGTH} />
 	</div>
-	<div>
+	<div class="w-24">
 		<Label for="categories" class="mt-2">category:</Label>
 		<Select id="categories" class="mt-2" bind:value={category} placeholder="">
 			{#await get_local_categories_fetch_if_not_exists()}
-				<option value={DEFAULT_CATEGORY_ID}>Default category</option>
+				<option value={DEFAULT_CATEGORY_ID}>Default</option>
 			{:then categories}
 				{#each categories as cat}
 					<option selected={cat.id===DEFAULT_CATEGORY_ID} value={cat.id} style="color:#{cat.color}">{cat.name}</option>
@@ -108,7 +133,6 @@
 		</Select>
 	</div>
 </form>
-
 
 
 <RichTextComposer bind:this={composerComponent} />
@@ -125,3 +149,9 @@
 		<Send />
 	</button>
 </div>
+
+<Skeleton class="py-4"/>
+<ImagePlaceholder class="my-8"/>
+<Skeleton class="py-4"/>
+<Skeleton class="mb-8 mt-16"/>
+<ImagePlaceholder class="my-8"/>

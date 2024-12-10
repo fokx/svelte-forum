@@ -11,6 +11,7 @@ import {
 
 export function prepopulatedRichText() {
   const root = $getRoot();
+  return
   if (root.getFirstChild() === null) {
     const heading = $createHeadingNode('h1');
     heading.append($createTextNode('Welcome to the playground'));

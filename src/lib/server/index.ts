@@ -23,9 +23,6 @@ export async function admin_post_url(url: string, body: string) {
 	return await response.json();
 }
 
-export async function create_api_key(url: string, username: string) {
-	return await admin_post_url(url, `{"key":{"description":"user-api-key","username":"${username}"}}`);
-}
 
 export async function admin_get_url(url: string) {
 	const response = await fetch(urlJoin(PUBLIC_DISCOURSE_HOST, url), {

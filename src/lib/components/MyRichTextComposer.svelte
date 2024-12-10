@@ -68,7 +68,7 @@
 	let placeholderText = $derived(isCollab
 		? 'Enter some collaborative rich text...'
 		: isRichText
-			? 'Enter some rich text...'
+			? 'Type here. To toggle between Markdown mode, click the markdown button in toolbar.'
 			: 'Enter some plain text...');
 
 	let isSmallWidthViewport = $state(true);

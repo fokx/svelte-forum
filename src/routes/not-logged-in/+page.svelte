@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { PUBLIC_DISCOURSE_HOST } from '$env/static/public';
 	import {Card, Button} from 'svelte-5-ui-lib';
+	// import type { PageData } from './$types';
+	// import { goto } from '$app/navigation';
+	// let { data }: { data: PageServerData } = $props();
+	// if (data.user) {
+	// 	goto('/community');
+	// }
 </script>
 
 

@@ -3,13 +3,14 @@ import { db } from '$lib/server/db';
 import { posts, users } from '$lib/server/db/schema';
 import { asc, desc } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
+import type { DiscourseUser } from '$lib';
+
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	let cloud_posts, cloud_users;
 	const user = locals.user;
 	const api_key = locals.api_key;
 	const not_logged_in = '/not-logged-in';
-	console.log(user);
 	if (user && url.pathname === not_logged_in) {
 		return redirect(302, '/');
 	}

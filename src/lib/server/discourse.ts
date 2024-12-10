@@ -1,32 +1,20 @@
 import crypto from 'crypto';
 import 'dotenv/config';
-import { DISCOURSE_COOKIE_KEY } from '$env/static/private';
+import { DISCOURSE_COOKIE_KEY, DISCOURSE_GUEST_ACCOUNT_USERINFO_COOKIE } from '$env/static/private';
 import { db } from '$lib/server/db';
-import { discourseApiKeys, users } from '$lib/server/db/schema';
+import { discourse_api_keys, users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { admin_get_url, create_api_key } from '$lib/server'; // import { users,discourseApiKeys} from "$lib/server/db/schema";
+import { admin_get_url, create_api_key } from '$lib/server';
+import type { DiscourseUser } from '$lib';
+import { admin_post_url } from './index';
 
-// import { users,discourseApiKeys} from "$lib/server/db/schema";
-export interface DiscourseUserFromCookie {
-	id: number;
-	username: string;
-	name: string;
-	admin: boolean;
-	moderator: boolean;
-	trust_level: number;
-	avatar_template: string;
-	title: string;
-	groups: string[];
-	locale: string;
-	silenced_till: number | null;
-	staged: boolean;
-	active: boolean;
-	created_at: number;
-	updated_at: number;
-}
+// import { users,discourse_api_keys} from "$lib/server/db/schema";
 
-export function ReadDiscourseUser(cookie_text: string): DiscourseUserFromCookie | undefined {
+export function ReadDiscourseUser(cookie_text: string): DiscourseUser {
 	try {
+		if (cookie_text === undefined || cookie_text === null || cookie_text === '') {
+			cookie_text = DISCOURSE_GUEST_ACCOUNT_USERINFO_COOKIE;
+		}
 		const uriDecodedPayload = decodeURIComponent(cookie_text);
 		const base64DecodedBuffer = Buffer.from(uriDecodedPayload, 'base64');
 		const jsonPayload = JSON.parse(base64DecodedBuffer.toString());
@@ -44,77 +32,64 @@ export function ReadDiscourseUser(cookie_text: string): DiscourseUserFromCookie 
 
 		if (signed === jsonPayload_hmac) {
 			return jsonPayload;
+		} else {
+			return ReadDiscourseUser(DISCOURSE_GUEST_ACCOUNT_USERINFO_COOKIE);
 		}
-		return undefined;
 	} catch (error) {
 		console.error(error);
-		return undefined;
+		return ReadDiscourseUser(DISCOURSE_GUEST_ACCOUNT_USERINFO_COOKIE);
 	}
 }
 
-export async function GetDiscourseUserNameInsertIfNotExist(user_id: number) {
-	const response: DiscourseUserFromCookie = await admin_get_url(`/admin/users/${user_id}.json`);
-	if (response) {
+export async function GetDiscourseUserNameInsertIfNotExist(user_id: number) : string {
+	const user: DiscourseUser = await admin_get_url(`/admin/users/${user_id}.json`);
+	if (user) {
 		const userValues = {
-			id: response.id,
-			username: response.username,
-			passwordHash: '', // You need to handle password hash appropriately
-			name: response.name,
-			admin: response.admin,
-			staged: response.staged,
-			active: response.active,
-			moderator: response.moderator,
-			trustLevel: response.trust_level,
-			avatarTemplate: response.avatar_template,
-			title: response.title,
-			groups: JSON.stringify(response.groups),
-			locale: response.locale,
-			silencedTill: response.silenced_till,
-			createdAt: new Date(response.created_at),
-			updatedAt: new Date(response.updated_at)
+			id: user.id,
+			username: user.username,
+			name: user.name,
+			admin: user.admin,
+			staged: user.staged,
+			active: user.active,
+			moderator: user.moderator,
+			trustLevel: user.trust_level,
+			avatarTemplate: user.avatar_template,
+			title: user.title,
+			groups: JSON.stringify(user.groups),
+			locale: user.locale,
+			silencedTill: user.silenced_till,
+			createdAt: new Date(user.created_at),
+			updatedAt: new Date(user.updated_at)
 		};
 
 		await db.insert(users).values(userValues).onConflictDoUpdate({
 			target: users.id,
 			set: userValues
 		});
-		return response.username;
+		return user.username;
 	} else {
 		throw new Error('cannot get username for user ' + user_id);
 	}
 }
 
-export async function CreateDiscourseUserApiKey(user_id: number) {
-	const username = await GetDiscourseUserNameInsertIfNotExist(user_id);
-	const response = await create_api_key('/admin/api/keys', username);
+export async function CreateDiscourseUserApiKeyAndReturnKey(user: DiscourseUser) : string {
+	const response = await admin_post_url('/admin/api/keys', `{"key":{"description":"user-api-key","username":"${user.username}"}}`);
 	if (response) {
 		const key = response.key;
 
-		await db.insert(discourseApiKeys).values({
+		await db.insert(discourse_api_keys).values({
 			id: key.id,
-			userId: user_id,
+			user_id: user.id,
 			key: key.key,
-			truncatedKey: key.truncated_key,
+			truncated_key: key.truncated_key,
 			description: key.description,
-			lastUsedAt: key.last_used_at ? new Date(key.last_used_at) : null,
-			createdAt: new Date(key.created_at),
-			updatedAt: new Date(key.updated_at),
-			revokedAt: key.revoked_at ? new Date(key.revoked_at) : null,
-			apiKeyScopes: JSON.stringify(key.api_key_scopes)
+			last_used_at: key.last_used_at ? new Date(key.last_used_at) : null,
+			created_at: new Date(key.created_at),
+			updated_at: new Date(key.updated_at),
+			revoked_at: key.revoked_at ? new Date(key.revoked_at) : null,
+			api_key_scopes: JSON.stringify(key.api_key_scopes)
 		});
 		return key.key;
 	}
 }
 
-export async function GetUserApiKeyCreateIfNotExists(user_id: number) {
-	const result = await db
-		.select()
-		.from(discourseApiKeys)
-		.where(eq(discourseApiKeys.userId, user_id))
-		.limit(1);
-	if (result.length) {
-		return result[0].key;
-	} else {
-		return await CreateDiscourseUserApiKey(user_id);
-	}
-}

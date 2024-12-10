@@ -26,18 +26,17 @@
     import {page} from '$app/stores';
     import {sineIn} from "svelte/easing";
     import '../app.css';
-    import {
-        BookmarkFill,
-        CardList,
-        ChatLeftDots,
-        GraphUp,
-        HouseDoorFill,
-        PencilSquare,
-        PersonFill,
-        Plus,
-        Search,
-        Sliders2Vertical
-    } from 'svelte-bootstrap-svg-icons';
+    import BookmarkFill from 'svelte-bootstrap-svg-icons/BookmarkFill.svelte';
+    import CardList from 'svelte-bootstrap-svg-icons/CardList.svelte';
+    import ChatLeftDots from 'svelte-bootstrap-svg-icons/ChatLeftDots.svelte';
+    import GraphUp from 'svelte-bootstrap-svg-icons/GraphUp.svelte';
+    import HouseDoorFill from 'svelte-bootstrap-svg-icons/HouseDoorFill.svelte';
+    import PencilSquare from 'svelte-bootstrap-svg-icons/PencilSquare.svelte';
+    import PersonFill from 'svelte-bootstrap-svg-icons/PersonFill.svelte';
+    import Plus from 'svelte-bootstrap-svg-icons/Plus.svelte';
+    import Search from 'svelte-bootstrap-svg-icons/Search.svelte';
+    import Sliders2Vertical from 'svelte-bootstrap-svg-icons/Sliders2Vertical.svelte';
+    import { assemble_avatar_full_url } from '$lib';
 
     let {children, data} = $props();
     let activeUrl = $state($page.url.pathname);
@@ -55,7 +54,6 @@
         isDemoOpen = demoSidebarUi.isOpen;
     });
     let navClass = "w-full divide-gray-200 border-gray-200 bg-gray-50 dark_bg_theme text-gray-500 dark:divide-gray-700 dark:border-gray-700 dark:transparent dark:text-gray-400 sm:px-4";
-
     function toggleDarkMode(event) {
         let target = event.target;
         let child = target.querySelector('.darkmode-button-in-avatar-dropdown');
@@ -95,20 +93,18 @@
                 <Darkmode class="hidden lg:block"/>
             </div>
             <div class="flex items-center space-x-1 order-4">
-                <Avatar class="rotate-90 me-1 ms-3" onclick={dropdownUser.toggle} src="/images/svelte-icon.png"
+                <Avatar class="rotate-360 me-1 ms-3" onclick={dropdownUser.toggle} src={assemble_avatar_full_url(data.user?.avatar_template)}
                         dot={{ color: "green" }}/>
                 <div class="relative">
                     <Dropdown dropdownStatus={dropdownUserStatus} closeDropdown={closeDropdownUser}
                               params={{ y: 0, duration: 200, easing: sineIn }}
                               class="absolute -left-[110px] top-[14px] md:-left-[160px] ">
                         <DropdownHeader class="px-4 py-2">
-                            <span class="block text-sm text-gray-900 dark:text-white">Your Username</span>
-                            <span class="block truncate text-sm font-medium">or something else</span>
+                            <span class="block text-sm text-gray-900 dark:text-white">{data.user?.name}</span>
+                            <span class="block truncate text-sm font-medium">{data.user?.username}</span>
                         </DropdownHeader>
                         <DropdownUl>
-                            <DropdownLi href="/">Home</DropdownLi>
-                            <DropdownLi href="/DropdownLi1">DropdownLi1</DropdownLi>
-                            <DropdownLi href="/DropdownL2">DropdownLi2</DropdownLi>
+                            <DropdownLi href="/settings">Settings</DropdownLi>
                             <DropdownLi>
                                 <button class="lg:hidden w-full text-left" onclick={event => toggleDarkMode(event)}>
                                     <Darkmode

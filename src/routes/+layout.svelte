@@ -37,6 +37,8 @@
     import Search from 'svelte-bootstrap-svg-icons/Search.svelte';
     import Sliders2Vertical from 'svelte-bootstrap-svg-icons/Sliders2Vertical.svelte';
     import { assemble_avatar_full_url } from '$lib';
+    import { dbd } from '$lib/dbd';
+    import { onMount } from 'svelte';
 
     let {children, data} = $props();
     let activeUrl = $state($page.url.pathname);
@@ -59,6 +61,16 @@
         let child = target.querySelector('.darkmode-button-in-avatar-dropdown');
         child?.click();
     }
+    async function init_dbd_cache() {
+        let dbdc = await dbd.cache.toCollection().last();
+        if (!dbdc || dbdc.api_key !== data.api_key) {
+            dbd.cache.clear();
+            dbd.cache.add({api_key: data.api_key, api_username: data.user.username});
+        }
+    }
+    onMount(async () => {
+        await init_dbd_cache();
+    });
 </script>
 <header class="sticky top-0 z-50 mx-auto w-full flex-none border-b border-gray-200 bg-gray-50 lg:pl-4 dark:border-gray-600 dark:bg-gray-950">
     <Navbar {navClass} hamburgerMenu={false} fluid div2Class="ml-auto w-full">

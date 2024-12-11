@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import 'dotenv/config';
 import { DISCOURSE_COOKIE_KEY, DISCOURSE_GUEST_ACCOUNT_USERINFO_COOKIE } from '$env/static/private';
-import { db } from '$lib/server/db';
+import { dbs } from '$lib/server/db';
 import { discourse_api_keys, users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { admin_get_url, create_api_key } from '$lib/server';
@@ -62,7 +62,7 @@ export async function GetDiscourseUserNameInsertIfNotExist(user_id: number) : st
 			updatedAt: new Date(user.updated_at)
 		};
 
-		await db.insert(users).values(userValues).onConflictDoUpdate({
+		await dbs.insert(users).values(userValues).onConflictDoUpdate({
 			target: users.id,
 			set: userValues
 		});
@@ -77,7 +77,7 @@ export async function CreateDiscourseUserApiKeyAndReturnKey(user: DiscourseUser)
 	if (response) {
 		const key = response.key;
 
-		await db.insert(discourse_api_keys).values({
+		await dbs.insert(discourse_api_keys).values({
 			id: key.id,
 			user_id: user.id,
 			key: key.key,

@@ -4,4 +4,4 @@ import Database from 'better-sqlite3';
 dotenv.config();
 
 const client = new Database(process.env.DATABASE_URL);
-export const db = drizzle(client);
+export const dbs = drizzle(client);

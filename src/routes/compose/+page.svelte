@@ -8,7 +8,7 @@
 	import type { PageData } from './$types';
 	import '../../app.css';
 	import Send from 'svelte-bootstrap-svg-icons/Send.svelte';
-	import { get_url, post_url } from '$lib';
+	import { GeneratePostId, get_url, post_url, update_local_categories } from '$lib';
 	import { goto } from '$app/navigation';
 	import { PUBLIC_MAX_TITLE_LENGTH } from '$env/static/public';
 	import { dbd } from '$lib/dbd';
@@ -21,40 +21,18 @@
 	let category = $state(DEFAULT_CATEGORY_ID);
 
 	async function get_local_categories_fetch_if_not_exists() {
-		let categories = dbd.categories.toArray();
+		let categories = await dbd.categories.toArray();
 		if (categories.length > 0) {
 			return categories;
 		} else {
-			let response = await get_url(data.user.username, data.api_key, '/categories.json');
-			if (response.status === 200) {
-				response = await response.json();
-				let categories = response.category_list.categories;
-				for (let cat of categories) {
-					dbd.categories.add({
-						id: cat.id,
-						name: cat.name,
-						color: cat.color,
-						text_color: cat.text_color,
-						slug: cat.slug,
-						topic_count: cat.topic_count,
-						post_count: cat.post_count,
-						position: cat.position,
-						description: cat.description,
-						topic_url: cat.topic_url
-					});
-				}
-				return categories;
-			}
+			update_local_categories(data.user.username, data.api_key);
+			return await dbd.categories.toArray();
 		}
 	}
-
+	let autosaveTimer;
 	let composerComponent;
 	const editor: LexicalEditor = getEditor();
-	// onMount(() => {
-	// 	const editor = composerComponent.getEditor();
-	// 	editor.registerUpdateListener(({ editorState }) => {
-	// 	});
-	// });
+
 	async function submit_post() {
 		const editor = composerComponent.getEditor();
 		// let state = (JSON.stringify(editor.getEditorState()));
@@ -75,15 +53,26 @@
 			'raw': markdown,
 			'category': category
 		};
-
-		let response = await post_url(data.user.username, data.api_key, '/posts.json', JSON.stringify(body));
+		let post_id = GeneratePostId();
+		dbd.posts.add({
+			id: post_id,
+			raw: markdown,
+			title: title,
+			// the following fields are not present in api response
+			reply_to_user_id: null,
+			// like_count: response?.like_count,
+			// word_count: response?.word_count,
+			// deleted: response?.deleted,
+			is_main_post: true,
+			main_post_id: post_id,
+			reply_to_post_id: null,
+		})
+		let response = await post_url('/posts.json', JSON.stringify(body));
 		if (response.status === 200) {
 			alert('Post submitted successfully!');
 			response = await response.json();
 			console.log(response);
-			dbd.posts.add({
-				id: response?.id,
-				raw: response?.raw,
+			dbd.posts.update(post_id, {
 				cooked: response?.cooked,
 				post_number: response?.post_number,
 				topic_id: response?.topic_id,
@@ -93,24 +82,33 @@
 				created_at: response?.created_at,
 				deleted_at: response?.deleted_at,
 				updated_at: response?.updated_at,
-				// the following fields are not in the response
-				reply_to_user_id: response?.reply_to_user_id,
-				like_count: response?.like_count,
-				word_count: response?.word_count,
-				deleted: response?.deleted,
-				is_main_post: response?.is_main_post,
-				main_post_id: response?.main_post_id,
-				reply_to_post_id: response?.reply_to_post_id,
 			});
+			if (autosaveTimer){
+				console.log(autosaveTimer);
+				clearInterval(autosaveTimer);
+			}
 			goto(`/t/${response.topic_slug}/${response.topic_id}`);
 		} else {
 			alert('Failed to submit post!');
 			console.log(response);
 		}
 	}
-
 	onMount(() => {
+		autosaveTimer = setInterval(() => {
+			const editor = composerComponent.getEditor();
+			let markdown;
+			editor.update(() => {
+				markdown = convertToMarkdownString(
+					PLAYGROUND_TRANSFORMERS,
+					undefined,
+					true
+				);
+			});
+			dbd.draft_cache.put({url: window.location.pathname, markdown: markdown, title: title});
+			// TODO: load draft from cache when composer mounted
+		}, 5000);
 	});
+
 </script>
 
 <form class="flex items-center space-x-4">
@@ -137,15 +135,11 @@
 
 <RichTextComposer bind:this={composerComponent} />
 <div class="actionbar">
-	<!--				<ImportButton />-->
-	<!--				<ExportButton />-->
-	<!--				<ReadonlyButton />-->
 	<button
 		class="action-button submit"
 		onclick={() =>submit_post()}
 		title="Submit"
 		aria-label="Submit editor state">
-		<!--	<i class="submit"></i>-->
 		<Send />
 	</button>
 </div>

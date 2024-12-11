@@ -3,7 +3,7 @@ import { ReadDiscourseUser } from '$lib/server/discourse';
 import { DISCOURSE_COOKIE_NAME } from '$env/static/private';
 import { eq } from 'drizzle-orm';
 import { CreateDiscourseUserApiKeyAndReturnKey } from './lib/server/discourse';
-import { db } from '$lib/server/db';
+import { dbs } from '$lib/server/db';
 import { discourse_api_keys } from '$lib/server/db/schema';
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -22,7 +22,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.locals.user = user;
 
 		if (event.locals.api_key === undefined) {
-			const result = await db
+			const result = await dbs
 				.select()
 				.from(discourse_api_keys)
 				// TODO: add notnull filter

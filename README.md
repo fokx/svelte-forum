@@ -27,6 +27,24 @@ UserAuthToken.destroy_all
 ApiKey.where(description: "user-api-key").destroy_all
 ```
 
+server side sqlite exported as `dbs`
+```js
+import { dbs } from '$lib/server/db';
+```
+
+browser side IndexDB exported as `dbd`, e.g.:
+```js
+import { dbd } from '$lib/dbd';
+import { browser } from '$app/environment';
+let topic_posts = $state([]);
+if (browser){
+	topic_posts= dbd.posts.where("topic_id").equals(Number(data.params.level2)).toArray();
+}
+```
+
+Discourse API docs:
+https://docs.discourse.org/
+
 ### offline-first
 [ ] when user presses submit button, the post is tagged with random string as global ID, marked as not-synced 
 and then sent together with the global ID,
@@ -39,7 +57,10 @@ check:
 https://github.com/angusmcleod/discourse-events/commit/33ba86f66e22afaab30dd64eb0e51e45f17860c9#diff-040b0c3e0e3b0c377ccb9da72d51e1a9716135b8958e74aa81f104651972ee23R90
 https://docs.discourse.org/#tag/Topics/operation/createTopicPostPM
 https://meta.discourse.org/t/are-custom-fields-on-posts-topics-available-via-the-api/49455/8
-[ ] Draft is saved in browser IndexedDB periodically so that the *latest* draft can be recovered from browser crash
+
+[ ] Draft is saved in browser IndexedDB periodically 
+so that the *latest* draft can be recovered from browser crash or when user navigates to other page
+
 [x] categories cached in browser, manual refresh in user settings
 
 

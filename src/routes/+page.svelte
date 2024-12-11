@@ -11,19 +11,14 @@
 		// TODO: check latest is updated in Discourse and fetch latest data
 		// TODO: infinite scroll
 		let topics = [];
-		if (browser){
-			topics = await update_latest_topics();
-			console.log('topics', topics);
+		if (browser) {
+			topics = await dbb.posts.where('post_number').equals(1).limit(50).toArray();
+			if (topics.length > 0) {
+				return topics;
+			} else {
+				topics = await update_latest_topics();
+			}
 		}
-		//
-		// if (browser) {
-		// 	topics = await dbb.posts.where('post_number').equals(1).limit(50).toArray();
-		// 	if (topics.length > 0) {
-		// 		return topics;
-		// 	} else {
-		// 		topics = await update_latest_topics();
-		// 	}
-		// }
 		return topics;
 	}
 </script>
@@ -31,7 +26,6 @@
 {#await load_or_fetch_latest_topics()}
 	<p>Loading...</p>
 {:then topics}
-	{$inspect(topics)}
 	{#if topics.length > 0}
 		<h2>Latest Topics</h2>
 		<ul>

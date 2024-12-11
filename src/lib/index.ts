@@ -153,7 +153,6 @@ export async function update_latest_topics() {
 	if (response.status === 200) {
 		response = await response.json();
 		const topics = response.topic_list.topics;
-		console.log(topics);
 		let ret = [];
 		for (const topic of topics) {
 			// TODO: add global id in Discourse
@@ -183,7 +182,6 @@ export async function update_latest_topics() {
 				last_poster_username: topic.last_poster_username,
 				bumped_at: topic.bumped_at
 			};
-			console.log(p);
 			dbb.posts.put(p);
 			ret.push(p);
 		}
@@ -200,7 +198,6 @@ export async function get_avatar_url_by_username(username) {
 	let response = await get_url(`/u/${username}.json`);
 	if (response.status === 200) {
 		response = await response.json();
-		console.log(response);
 		let user = response.user;
 		dbb.users.put({
 			id: user.id,

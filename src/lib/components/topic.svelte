@@ -15,7 +15,7 @@
 
 {#snippet post_data(post)}
 	<div class="flex-grow justify-center">
-		<Card class="max-w-3xl mb-2">
+		<Card class="max-w-3xl mb-2" href={`/t/${post.topic_id}`}>
 			{#if post.title}
 				<div class="flex justify-center">
 					<h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{post.title}</h5>

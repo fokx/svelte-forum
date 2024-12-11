@@ -18,7 +18,7 @@
 			if (posts.length > 0) {
 				return posts;
 			} else {
-				posts = await update_local_topic(data.user.username, data.api_key, Number(data.params.level1));
+				posts = await update_local_topic(Number(data.params.level1));
 			}
 		}
 		return posts;
@@ -32,7 +32,6 @@
 {#await load_or_fetch_topic_posts()}
 	Loading...
 {:then posts}
-	{$inspect(posts)}
 	{#each posts as post}
 		{#if post}
 			<Post post={post} indent={0} />

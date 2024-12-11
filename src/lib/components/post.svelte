@@ -32,7 +32,6 @@
 				true
 			);
 		});
-		console.log('post.main_post_id', post.main_post_id);
 		if (!markdown) {
 			alert('Reply is empty!');
 			return;
@@ -56,7 +55,6 @@
 		if (response.status === 200) {
 			alert('Post submitted successfully!');
 			response = await response.json();
-			console.log(response);
 			dbb.posts.update(post_id, {
 				cooked: response?.cooked,
 				post_number: response?.post_number,
@@ -69,18 +67,19 @@
 				updated_at: response?.updated_at
 			});
 			if (autosaveTimer) {
-				console.log(autosaveTimer);
 				clearInterval(autosaveTimer);
 			}
 			alert('Reply successfully!');
 		} else {
 			alert('Failed to submit post!');
-			console.log(response);
 		}
 	}
 
 	onMount(() => {
 		autosaveTimer = setInterval(() => {
+			if (!composerComponent) {
+				return;
+			}
 			const editor = composerComponent.getEditor();
 			let markdown;
 			editor.update(() => {
@@ -131,8 +130,8 @@
 			<button
 				class="ml-auto block"
 				onclick={() =>enable_reply_modal()}
-				title="Reply"
-				aria-label="Reply to post">
+				title={`Reply to post #${post.post_number}`}
+				aria-label={`Reply to post #${post.post_number}`}>
 				<Reply />
 			</button>
 		</Card>

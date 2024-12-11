@@ -25,7 +25,7 @@
 		if (categories.length > 0) {
 			return categories;
 		} else {
-			update_local_categories(data.user.username, data.api_key);
+			update_local_categories();
 			return await dbb.categories.toArray();
 		}
 	}
@@ -71,7 +71,6 @@
 		if (response.status === 200) {
 			alert('Post submitted successfully!');
 			response = await response.json();
-			console.log(response);
 			dbb.posts.update(post_id, {
 				cooked: response?.cooked,
 				post_number: response?.post_number,
@@ -84,13 +83,11 @@
 				updated_at: response?.updated_at,
 			});
 			if (autosaveTimer){
-				console.log(autosaveTimer);
 				clearInterval(autosaveTimer);
 			}
 			goto(`/t/${response.topic_id}`);
 		} else {
 			alert('Failed to submit post!');
-			console.log(response);
 		}
 	}
 	onMount(() => {

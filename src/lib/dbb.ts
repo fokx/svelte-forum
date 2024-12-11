@@ -1,7 +1,7 @@
 import Dexie from 'dexie';
 // Dexie.debug = 'dexie';
 
-export const dbd = new Dexie('svelte-forum');
+export const dbb = new Dexie('svelte-forum');
 
 /*
 NOTE: Unlike SQL, you don’t need to specify all properties but only the one you wish to index.
@@ -19,8 +19,8 @@ https://dexie.org/docs/Table/Table.filter()
 https://dexie.org/docs/Tutorial/Understanding-the-basics#primary-and-secondary-indexes
 https://dexie.org/cloud/docs/best-practices#examples-primary-keys
  */
-dbd.version(1).stores({
-	posts: '&id, [topic_id+post_number]',
+dbb.version(1).stores({
+	posts: '&id, [topic_id+post_number], topic_id, post_number',
 	users: '&id, username',
 	discourse_api_keys: '&id, user_id',
 	categories: '&id, name, slug',

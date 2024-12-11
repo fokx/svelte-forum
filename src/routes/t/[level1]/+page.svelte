@@ -3,22 +3,22 @@
 
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
-	import { dbd } from '$lib/dbd';
+	import { dbb } from '$lib/dbb';
 	import { browser } from '$app/environment';
 	import Post from '$lib/components/post.svelte';
 	import { update_local_topic } from '$lib';
 
 	let { data }: { data: PageData } = $props();
 
-	async function topic_posts() {
+	async function load_or_fetch_topic_posts() {
+		// TODO: check topic is updated in Discourse and fetch latest data
 		let posts = [];
 		if (browser) {
-			posts = await dbd.posts.where('topic_id').equals(Number(data.params.level1)).toArray();
+			posts = await dbb.posts.where('topic_id').equals(Number(data.params.level1)).toArray();
 			if (posts.length > 0) {
 				return posts;
 			} else {
-				update_local_topic(data.user.username, data.api_key, Number(data.params.level1));
-				return await dbd.posts.where('topic_id').equals(Number(data.params.level1)).toArray();
+				posts = await update_local_topic(data.user.username, data.api_key, Number(data.params.level1));
 			}
 		}
 		return posts;
@@ -29,7 +29,7 @@
 </script>
 
 
-{#await topic_posts()}
+{#await load_or_fetch_topic_posts()}
 	Loading...
 {:then posts}
 	{$inspect(posts)}

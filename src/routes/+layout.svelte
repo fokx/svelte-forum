@@ -37,7 +37,7 @@
     import Search from 'svelte-bootstrap-svg-icons/Search.svelte';
     import Sliders2Vertical from 'svelte-bootstrap-svg-icons/Sliders2Vertical.svelte';
     import { assemble_avatar_full_url } from '$lib';
-    import { dbd } from '$lib/dbd';
+    import { dbb } from '$lib/dbb';
     import { onMount } from 'svelte';
 
     let {children, data} = $props();
@@ -62,10 +62,10 @@
         child?.click();
     }
     async function init_dbd_cache() {
-        let dbdc = await dbd.cache.toCollection().last();
+        let dbdc = await dbb.cache.toCollection().last();
         if (!dbdc || dbdc.api_key !== data.api_key) {
-            dbd.cache.clear();
-            dbd.cache.add({api_key: data.api_key, api_username: data.user.username});
+            dbb.cache.clear();
+            dbb.cache.add({api_key: data.api_key, api_username: data.user.username});
         }
     }
     onMount(async () => {
@@ -169,7 +169,7 @@
         </SidebarGroup>
 
         <SidebarGroup border>
-            <SidebarItem label="Community" href="/community">
+            <SidebarItem label="Home" href="/">
                 {#snippet iconSlot()}
                     <GraphUp/>
                 {/snippet}
@@ -209,7 +209,7 @@
     </BottomNavItem>
     <BottomNavItem btnName="Search">
         <Search
-                class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
+                class="mb-1 h-6 w-6 text-grayd-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
     </BottomNavItem>
     <BottomNavItem btnName="Settings">
         <Sliders2Vertical

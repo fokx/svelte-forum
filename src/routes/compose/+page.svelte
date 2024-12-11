@@ -11,7 +11,7 @@
 	import { GeneratePostId, get_url, post_url, update_local_categories } from '$lib';
 	import { goto } from '$app/navigation';
 	import { PUBLIC_MAX_TITLE_LENGTH } from '$env/static/public';
-	import { dbd } from '$lib/dbd';
+	import { dbb } from '$lib/dbb';
 
 	let { data }: { data: PageData } = $props();
 	let title = $state('');
@@ -21,12 +21,12 @@
 	let category = $state(DEFAULT_CATEGORY_ID);
 
 	async function get_local_categories_fetch_if_not_exists() {
-		let categories = await dbd.categories.toArray();
+		let categories = await dbb.categories.toArray();
 		if (categories.length > 0) {
 			return categories;
 		} else {
 			update_local_categories(data.user.username, data.api_key);
-			return await dbd.categories.toArray();
+			return await dbb.categories.toArray();
 		}
 	}
 	let autosaveTimer;
@@ -54,7 +54,7 @@
 			'category': category
 		};
 		let post_id = GeneratePostId();
-		dbd.posts.add({
+		dbb.posts.add({
 			id: post_id,
 			raw: markdown,
 			title: title,
@@ -65,14 +65,14 @@
 			// deleted: response?.deleted,
 			is_main_post: true,
 			main_post_id: post_id,
-			reply_to_post_id: null,
+			reply_to_post_id: post_id,
 		})
 		let response = await post_url('/posts.json', JSON.stringify(body));
 		if (response.status === 200) {
 			alert('Post submitted successfully!');
 			response = await response.json();
 			console.log(response);
-			dbd.posts.update(post_id, {
+			dbb.posts.update(post_id, {
 				cooked: response?.cooked,
 				post_number: response?.post_number,
 				topic_id: response?.topic_id,
@@ -87,7 +87,7 @@
 				console.log(autosaveTimer);
 				clearInterval(autosaveTimer);
 			}
-			goto(`/t/${response.topic_slug}/${response.topic_id}`);
+			goto(`/t/${response.topic_id}`);
 		} else {
 			alert('Failed to submit post!');
 			console.log(response);
@@ -104,7 +104,7 @@
 					true
 				);
 			});
-			dbd.draft_cache.put({url: window.location.pathname, markdown: markdown, title: title});
+			dbb.draft_cache.put({url: window.location.pathname, markdown: markdown, title: title});
 			// TODO: load draft from cache when composer mounted
 		}, 5000);
 	});

@@ -69,6 +69,7 @@ export const posts = sqliteTable('posts', {
 	post_number: integer('post_number').notNull(),
 	topic_id: integer('topic_id').notNull(),
 	user_id: integer('user_id').references(() => users.id),
+	username: text('username', { length: 65535 }).notNull(),
 	reply_to_post_number: integer('reply_to_post_number'),
 	reply_to_user_id: integer('reply_to_user_id'),
 	reply_count: integer('reply_count'),

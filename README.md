@@ -32,13 +32,13 @@ server side sqlite exported as `dbs`
 import { dbs } from '$lib/server/db';
 ```
 
-browser side IndexDB exported as `dbd`, e.g.:
+browser side IndexDB exported as `dbb`, e.g.:
 ```js
-import { dbd } from '$lib/dbd';
+import { dbb } from '$lib/dbb';
 import { browser } from '$app/environment';
 let topic_posts = $state([]);
 if (browser){
-	topic_posts= dbd.posts.where("topic_id").equals(Number(data.params.level2)).toArray();
+	topic_posts= dbb.posts.where("topic_id").equals(Number(data.params.level2)).toArray();
 }
 ```
 

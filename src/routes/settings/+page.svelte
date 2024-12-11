@@ -2,7 +2,7 @@
 	import { Button, Spinner, Toast } from 'svelte-5-ui-lib';
 	import type { PageData } from './$types';
 	import { get_url } from '$lib';
-	import { dbd } from '$lib/dbd';
+	import { dbb } from '$lib/dbb';
 
 	let { data }: { data: PageData } = $props();
 	let syncPromise: Promise<void> | null = $state();

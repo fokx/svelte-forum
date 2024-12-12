@@ -4,7 +4,7 @@ import { DISCOURSE_COOKIE_KEY, DISCOURSE_GUEST_ACCOUNT_USERINFO_COOKIE } from '$
 import { dbs } from '$lib/server/db';
 import { discourse_api_keys, users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { admin_get_url, create_api_key } from '$lib/server';
+import { admin_get_url } from '$lib/server';
 import type { DiscourseUser } from '$lib';
 import { admin_post_url } from './index';
 

@@ -11,15 +11,46 @@
 	import Reply from 'svelte-bootstrap-svg-icons/Reply.svelte';
 	import { dbb } from '$lib/dbb';
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
+	import Self from './Post.svelte';
+	import { fly, slide } from 'svelte/transition';
 
 	let {
-		post = $bindable(),
-		indent = $bindable()
+		post,
+		indent = 0,
+		expand = false,
+		inside_topic = false
 	} = $props();
 	let composerComponent = $state();
 	const editor: LexicalEditor = getEditor();
 	let editing = $state(false);
 	let autosaveTimer;
+
+	async function get_replies() {
+		let replies = [];
+		if (browser) {
+			if (inside_topic) {
+				// when reply directly to original post, reply_to_post_number is null,
+				// which is not indexable by IndexedDB, see https://dexie.org/docs/Indexable-Type
+				if (post.post_number === 1) {
+					replies = await dbb.posts.where({
+						topic_id: post.topic_id,
+					}).toArray();
+					replies = replies.filter(t => t.reply_to_post_number === null).filter(t => t.post_number !== 1);
+				} else{
+					replies = await dbb.posts.where({
+						topic_id: post.topic_id,
+						reply_to_post_number: post.post_number
+					}).toArray();
+				}
+				console.log('replies', replies);
+			} else {
+				console.warn('not implemented: display post with expand=true and inside_topic=false');
+			}
+		}
+
+		return replies;
+	}
 
 	async function reply_post() {
 		const editor = composerComponent.getEditor();
@@ -160,12 +191,23 @@
 	{/if}
 {/snippet}
 
+<div in:fly={{ y: 20 }} out:slide class="post" style="margin-left: { indent * 20}px;">
+		{#each Array(indent + 1) as _, j}
+			<div class="indent-line" style="left: {(j-indent) * 20 - 3}px;"></div>
+		{/each}
+		<div style="display:inline;">
+			{@render post_data(post)}
+		</div>
+</div>
 
-<!--{#if indent === 0}-->
-<!--	<div class="original-post">-->
-<!--		<div style="display: block; padding: 6px;">-->
-<!--			<User data={data} user_id={post.user_id} />-->
-<!--</div>-->
-{@render post_data(post)}
-<!--</div>-->
-<!--{/if}-->
+{#if expand}
+	{#await get_replies()}
+		<div>Loading replies...</div>
+	{:then replies}
+		{#each replies as reply}
+			<Self post={reply} expand={expand} indent={indent + 1} inside_topic={inside_topic} />
+		{/each}
+	{:catch error}
+		<div style="color: red">{error.message}</div>
+	{/await}
+{/if}

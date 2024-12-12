@@ -20,7 +20,7 @@ https://dexie.org/docs/Tutorial/Understanding-the-basics#primary-and-secondary-i
 https://dexie.org/cloud/docs/best-practices#examples-primary-keys
  */
 dbb.version(1).stores({
-	posts: '&id, [topic_id+post_number], topic_id, post_number',
+	posts: '&id, topic_id, post_number, reply_to_post_number', //[topic_id+post_number],[topic_id+reply_to_post_number],
 	users: '&id, username',
 	discourse_api_keys: '&id, user_id',
 	categories: '&id, name, slug',

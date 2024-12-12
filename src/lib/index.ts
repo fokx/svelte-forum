@@ -4,24 +4,24 @@ import {
 	PUBLIC_DISCOURSE_HOST,
 	PUBLIC_POST_ID_LENGTH
 } from '$env/static/public';
-import { generateRandomString } from '@oslojs/crypto/random';
 import { dbb } from '$lib/dbb';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
-const random = {
-	read(bytes) {
-		crypto.getRandomValues(bytes);
+function generateRandomString(length: number) {
+	let result = '';
+	const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	const charactersLength = characters.length;
+	let counter = 0;
+	while (counter < length) {
+		result += characters.charAt(Math.floor(Math.random() * charactersLength));
+		counter += 1;
 	}
-};
-
-export function GenerateId(length) {
-	const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
-	return generateRandomString(random, alphabet, length);
+	return result;
 }
 
 export function GeneratePostId() {
-	return GenerateId(PUBLIC_POST_ID_LENGTH);
+	return generateRandomString(PUBLIC_POST_ID_LENGTH);
 }
 
 export function display_time(d) {
@@ -98,7 +98,7 @@ export async function update_local_categories() {
 		response = await response.json();
 		const categories = response.category_list.categories;
 		for (const cat of categories) {
-			dbb.categories.put({
+			await dbb.categories.put({
 				id: cat.id,
 				name: cat.name,
 				color: cat.color,
@@ -141,20 +141,42 @@ export async function update_local_topic(topic_id: number) {
 				username: post.username,
 				avatar_template: post.avatar_template
 			};
-			dbb.posts.put(p);
+			await dbb.posts.put(p);
 			ret.push(p);
 		}
 		return ret;
 	}
 }
 
-export async function update_latest_topics() {
-	let response = await get_url(`/latest.json`);
+async function update_topics(response) {
 	if (response.status === 200) {
 		response = await response.json();
+		for (const user of response.users) {
+			await dbb.users.put({
+				id: user.id,
+				username: user.username,
+				name: user.name,
+				admin: user.admin,
+				staged: user?.staged,
+				active: user?.active,
+				moderator: user.moderator,
+				trust_level: user.trust_level,
+				avatar_template: user.avatar_template,
+				animated_avatar: user?.animated_avatar,
+				flair_name: user?.flair_name,
+				title: user?.title,
+				groups: user?.groups,
+				locale: user?.locale,
+				silenced_till: user?.silenced_till,
+				created_at: user?.created_at,
+				updated_at: user?.updated_at
+			});
+		}
 		const topics = response.topic_list.topics;
 		let ret = [];
 		for (const topic of topics) {
+			let posters = topic.posters;
+			let original_poster = posters[0];
 			// TODO: add global id in Discourse
 			const id = GeneratePostId();
 			const p = {
@@ -173,19 +195,82 @@ export async function update_latest_topics() {
 				// user_id: topic.user_id,
 				// username: topic.username,
 				// avatar_template: topic.avatar_template,
-				// topic specic field
-				fancy_title: topic.fancy_title,
-				posts_count: topic.posts_count,
-				excerpt: topic.excerpt,
-				image_url: topic.image_url,
-				last_posted_at: topic.last_posted_at,
-				last_poster_username: topic.last_poster_username,
-				bumped_at: topic.bumped_at
+				/// topic specic field
+				fancy_title: topic?.fancy_title,
+				posts_count: topic?.posts_count,
+				excerpt: topic?.excerpt,
+				image_url: topic?.image_url,
+				last_posted_at: topic?.last_posted_at,
+				last_poster_username: topic?.last_poster_username,
+				original_poster_user_id: original_poster?.user_id,
+				bumped_at: topic?.bumped_at
 			};
-			dbb.posts.put(p);
+			await dbb.posts.put(p);
 			ret.push(p);
 		}
 		return ret;
+	}
+}
+
+export async function update_latest_topics() {
+	let response = await get_url(`/latest.json`);
+	return await update_topics(response);
+}
+
+export async function update_user_topics(username: string) {
+	let response = await get_url(`/topics/created-by/${username}.json`);
+	return await update_topics(response);
+}
+
+export async function update_user_replies(username: string) {
+	let response = await get_url(
+		`/user_actions.json`,
+		{offset: 0, username: username, filter: 5}
+	);
+	if (response.status === 200) {
+		response = await response.json();
+		let ret = [];
+		for (const topic of response.user_actions) {
+			const id = GeneratePostId();
+			const p = {
+				id: id,
+				excerpt: topic?.excerpt,
+				title: topic.title,
+				reply_count: topic.reply_count,
+				post_number: topic.post_number,
+				topic_id: topic.id,
+				reply_to_post_number: topic.reply_to_post_number,
+				created_at: topic?.created_at,
+				deleted_at: topic?.deleted_at,
+				updated_at: topic?.updated_at,
+				// main_post_id: ,
+				is_main_post: true,
+				reply_to_post_id: topic.post_id,
+				// user_id: topic.user_id,
+				// username: topic.username,
+				// avatar_template: topic.avatar_template,
+				/// topic specic field
+				fancy_title: topic?.fancy_title,
+				posts_count: topic?.posts_count,
+				image_url: topic?.image_url,
+				last_posted_at: topic?.last_posted_at,
+				last_poster_username: topic?.last_poster_username,
+				acting_username: topic?.acting_username,
+				bumped_at: topic?.bumped_at
+			};
+			await dbb.posts.put(p);
+			ret.push(p);
+		}
+		return ret;
+	}
+}
+
+export async function get_cached_avatar_url_by_user_id(uid: number) {
+	const user = await dbb.users.where('id').equals(uid).first();
+	if (user) {
+		return user.avatar_template;
+	} else {
+		return null;
 	}
 }
 
@@ -199,7 +284,7 @@ export async function get_avatar_url_by_username(username) {
 	if (response.status === 200) {
 		response = await response.json();
 		let user = response.user;
-		dbb.users.put({
+		await dbb.users.put({
 			id: user.id,
 			username: user.username,
 			name: user.name,

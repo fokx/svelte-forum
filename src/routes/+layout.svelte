@@ -5,6 +5,7 @@
         BottomNavHeader,
         BottomNavHeaderItem,
         BottomNavItem,
+      Tooltip,
         Button,
         Dropdown,
         DropdownLi,
@@ -29,7 +30,7 @@
     import BookmarkFill from 'svelte-bootstrap-svg-icons/BookmarkFill.svelte';
     import CardList from 'svelte-bootstrap-svg-icons/CardList.svelte';
     import ChatLeftDots from 'svelte-bootstrap-svg-icons/ChatLeftDots.svelte';
-    import GraphUp from 'svelte-bootstrap-svg-icons/GraphUp.svelte';
+    import HouseDoor from 'svelte-bootstrap-svg-icons/HouseDoor.svelte';
     import HouseDoorFill from 'svelte-bootstrap-svg-icons/HouseDoorFill.svelte';
     import PencilSquare from 'svelte-bootstrap-svg-icons/PencilSquare.svelte';
     import PersonFill from 'svelte-bootstrap-svg-icons/PersonFill.svelte';
@@ -141,11 +142,16 @@
 </header>
 
 <div class="lg:flex" id="sidebar">
-    <Sidebar {activeUrl} isSingle={false} backdrop={false} isOpen={isDemoOpen} closeSidebar={closeDemoSidebar}
+    <Sidebar isSingle={false} backdrop={false} isOpen={isDemoOpen} closeSidebar={closeDemoSidebar}
              activeClass="flex items-center p-1 text-base font-normal text-white dark_bg_theme dark:hover:text-white hover:text-gray-900 bg-primary-700 rounded-lg dark:divide-gray-700 dark:border-gray-700 dark:transparent dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
              nonActiveClass="p-1 hover:bg-gray-200" divClass="bg-gray-50"
-             class="top-[62px] h-screen dark:bg-gray-900">
+             class="top-[62px] h-screen dark:bg-gray-900" activeUrl={activeUrl}>
         <SidebarGroup>
+            <SidebarItem label="Home" href="/">
+                {#snippet iconSlot()}
+                    <HouseDoor/>
+                {/snippet}
+            </SidebarItem>
             <SidebarItem label="Compose" href="/compose">
                 {#snippet iconSlot()}
                     <PencilSquare/>
@@ -155,26 +161,17 @@
                 {#snippet iconSlot()}
                     <PersonFill/>
                 {/snippet}
-                <SidebarItem label="Posts" href="/my/posts" class="pl-4">
+                <SidebarItem label="Topics" href="/my/topics" class="pl-4">
                     {#snippet iconSlot()}
                         <CardList/>
                     {/snippet}
                 </SidebarItem>
-                <SidebarItem label="Replies to me" href="/my/replies-to-me" class="pl-4">
+                <SidebarItem label="Replies" href="/my/replies" class="pl-4">
                     {#snippet iconSlot()}
                         <ChatLeftDots/>
                     {/snippet}
                 </SidebarItem>
             </SidebarDropdownWrapper>
-        </SidebarGroup>
-
-        <SidebarGroup border>
-            <SidebarItem label="Home" href="/">
-                {#snippet iconSlot()}
-                    <GraphUp/>
-                {/snippet}
-            </SidebarItem>
-
         </SidebarGroup>
 
     </Sidebar>
@@ -198,6 +195,7 @@
     <BottomNavItem btnName="Bookmark">
         <BookmarkFill
                 class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
+        <Tooltip arrow={false} triggeredBy="#home">Home</Tooltip>
     </BottomNavItem>
     <BottomNavItem btnName="Home" href="/community">
         <HouseDoorFill

@@ -48,12 +48,13 @@
 			alert('Title or content is empty!');
 			return;
 		}
+		let post_id = GeneratePostId();
 		let body = {
 			'title': title,
 			'raw': markdown,
-			'category': category
+			'category': category,
+			'external_id': post_id,
 		};
-		let post_id = GeneratePostId();
 		dbb.posts.add({
 			id: post_id,
 			raw: markdown,
@@ -71,6 +72,7 @@
 		if (response.status === 200) {
 			alert('Post submitted successfully!');
 			response = await response.json();
+			console.log(response);
 			dbb.posts.update(post_id, {
 				cooked: response?.cooked,
 				post_number: response?.post_number,
@@ -111,7 +113,7 @@
 <form class="flex items-center space-x-4">
 	<div class="flex-1">
 		<Textarea bind:value={title} id="title" class="bg-white dark:bg-gray-800 w-full" rows={1}
-							placeholder="Your post title (max {PUBLIC_MAX_TITLE_LENGTH})..." maxlength={PUBLIC_MAX_TITLE_LENGTH} />
+							placeholder="Title (max {PUBLIC_MAX_TITLE_LENGTH})..." maxlength={PUBLIC_MAX_TITLE_LENGTH} />
 	</div>
 	<div class="w-24">
 		<Label for="categories" class="mt-2">category:</Label>

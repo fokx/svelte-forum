@@ -1924,3 +1924,13 @@ button.toolbar-item.sl_font-increment {
     display: flex;
     justify-content: flex-end;
 }
+
+.indent-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    background-color: #000;
+    opacity: 20%;
+}

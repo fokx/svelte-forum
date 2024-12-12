@@ -1,18 +1,23 @@
 import { integer, sqliteTable, sqliteView, text } from 'drizzle-orm/sqlite-core';
 import { eq, relations } from 'drizzle-orm';
-import { generateRandomString } from '@oslojs/crypto/random';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-const random = {
-	read(bytes: never) {
-		crypto.getRandomValues(bytes);
-	}
-};
 
-function generateId(length: number) {
-	const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
-	return generateRandomString(random, alphabet, length);
+function generateRandomString(length: number) {
+	let result = '';
+	const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	const charactersLength = characters.length;
+	let counter = 0;
+	while (counter < length) {
+		result += characters.charAt(Math.floor(Math.random() * charactersLength));
+		counter += 1;
+	}
+	return result;
+}
+
+function GeneratePostId() {
+	return generateRandomString(16);
 }
 
 const common_timestamps = {
@@ -23,17 +28,17 @@ const common_timestamps = {
 
 export const users = sqliteTable('users', {
 	id: integer('id').primaryKey().notNull(),
-	username: text('username', { length: 65535 }).notNull().unique(),
-	name: text('name', { length: 65535 }),
+	username: text('username',).notNull().unique(),
+	name: text('name'),
 	admin: integer('admin', { mode: 'boolean' }).notNull(),
 	staged: integer('staged', { mode: 'boolean' }).notNull(),
 	active: integer('active', { mode: 'boolean' }).notNull(),
 	moderator: integer('moderator', { mode: 'boolean' }).notNull(),
 	trust_level: integer('trust_level').notNull(),
-	avatar_template: text('avatar_template', { length: 65535 }).notNull(),
-	title: text('title', { length: 65535 }),
-	groups: text('groups', { length: 65535 }).notNull(),
-	locale: text('locale', { length: 65535 }),
+	avatar_template: text('avatar_template').notNull(),
+	title: text('title'),
+	groups: text('groups').notNull(),
+	locale: text('locale'),
 	silenced_till: integer('silenced_till', { mode: 'timestamp' }),
 	created_at: integer('created_at', { mode: 'timestamp' }),
 	updated_at: integer('updated_at', { mode: 'timestamp' })
@@ -56,20 +61,20 @@ export const discourse_api_keys = sqliteTable('discourse_api_keys', {
 	created_at: integer('created_at', { mode: 'timestamp' }),
 	updated_at: integer('updated_at', { mode: 'timestamp' }),
 	revoked_at: integer('revoked_at', { mode: 'timestamp' }),
-	api_key_scopes: text('api_key_scopes', { length: 65535 })
+	api_key_scopes: text('api_key_scopes')
 });
 
 export const posts = sqliteTable('posts', {
 	id: text('id')
 		.primaryKey()
 		.notNull()
-		.$default(() => generateId(64)),
-	raw: text('raw', { length: 65535 }).notNull(),
-	cooked: text('cooked', { length: 65535 }).notNull(),
+		.$default(() => GeneratePostId()),
+	raw: text('raw').notNull(),
+	cooked: text('cooked').notNull(),
 	post_number: integer('post_number').notNull(),
 	topic_id: integer('topic_id').notNull(),
 	user_id: integer('user_id').references(() => users.id),
-	username: text('username', { length: 65535 }).notNull(),
+	username: text('username').notNull(),
 	reply_to_post_number: integer('reply_to_post_number'),
 	reply_to_user_id: integer('reply_to_user_id'),
 	reply_count: integer('reply_count'),
@@ -77,8 +82,8 @@ export const posts = sqliteTable('posts', {
 	word_count: integer('word_count'),
 	deleted: integer('deleted', { mode: 'boolean' }).$default(() => false),
 	is_main_post: integer('is_main_post', { mode: 'boolean' }).notNull(),
-	main_post_id: text('main_post_id', { length: 64 }).notNull(),
-	reply_to_post_id: text('reply_to_post_id', { length: 64 }),
+	main_post_id: text('main_post_id').notNull(),
+	reply_to_post_id: text('reply_to_post_id'),
 	...common_timestamps
 });
 

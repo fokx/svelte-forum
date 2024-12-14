@@ -94,17 +94,17 @@
             </NavBrand>
         {/snippet}
         {#snippet navSlotBlock()}
-            <div class="flex items-center space-x-1 order-2">
-                <Button class="me-1 rounded-lg bg-white p-2.5 text-sm text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 lg:hidden dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700">
-                    <Search class="h-5 w-5"/>
-                </Button>
-                <div class="relative hidden lg:block">
-                    <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
-                        <Search class="h-4 w-4"/>
-                    </div>
-                    <Input id="search-navbar" class="bg-transparent ps-10" placeholder="Search..."/>
-                </div>
-            </div>
+<!--            <div class="flex items-center space-x-1 order-2">-->
+<!--                <Button class="me-1 rounded-lg bg-white p-2.5 text-sm text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 lg:hidden dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700">-->
+<!--                    <Search class="h-5 w-5"/>-->
+<!--                </Button>-->
+<!--                <div class="relative hidden lg:block">-->
+<!--                    <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">-->
+<!--                        <Search class="h-4 w-4"/>-->
+<!--                    </div>-->
+<!--                    <Input id="search-navbar" class="bg-transparent ps-10" placeholder="Search..."/>-->
+<!--                </div>-->
+<!--            </div>-->
             <div class="flex items-center space-x-1 order-3">
                 <Darkmode class="hidden lg:block"/>
             </div>
@@ -137,8 +137,7 @@
         {/snippet}
         <!--only show NavUl on desktop, no NavHamburger on mobile-->
         <NavUl class="order-1 me-1 ms-1" {activeUrl}>
-            <NavLi href="/">Home</NavLi>
-            <NavLi href={PUBLIC_DISCOURSE_HOST}>Peer</NavLi>
+            <NavLi href={PUBLIC_DISCOURSE_HOST}>West</NavLi>
         </NavUl>
     </Navbar>
 </header>
@@ -187,32 +186,30 @@
 
 <!--only show BottomNav on mobile-->
 <BottomNav outerClass="hidden max-sm:block" position="fixed" navType="group" innerClass="grid-cols-5">
-    {#snippet header()}
-        <BottomNavHeader>
-            <BottomNavHeaderItem itemName="New"/>
-            <BottomNavHeaderItem itemName="Popular" active={true}/>
-            <BottomNavHeaderItem itemName="Following"/>
-        </BottomNavHeader>
-    {/snippet}
-    <BottomNavItem btnName="Bookmark">
-        <BookmarkFill
-                class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
-        <Tooltip arrow={false} triggeredBy="#home">Home</Tooltip>
+    <!--{#snippet header()}-->
+    <!--    <BottomNavHeader>-->
+    <!--        <BottomNavHeaderItem itemName="New"/>-->
+    <!--        <BottomNavHeaderItem itemName="Popular" active={true}/>-->
+    <!--        <BottomNavHeaderItem itemName="Following"/>-->
+    <!--    </BottomNavHeader>-->
+    <!--{/snippet}-->
+    <BottomNavItem btnName="Experimental">
+        <span class="text-gray-900 dark:text-white">Under construction</span>
     </BottomNavItem>
-    <BottomNavItem btnName="Home" href="/community">
-        <HouseDoorFill
-                class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
+    <BottomNavItem btnName="West" href={PUBLIC_DISCOURSE_HOST}>
+        <span class="text-gray-900 dark:text-white">West</span>
     </BottomNavItem>
     <BottomNavItem btnName="New post" href="/compose">
         <Plus
                 class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
     </BottomNavItem>
-    <BottomNavItem btnName="Search">
-        <Search
-                class="mb-1 h-6 w-6 text-grayd-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
+    <BottomNavItem btnName="East" href="/">
+        <HouseDoorFill
+          class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
     </BottomNavItem>
-    <BottomNavItem btnName="Settings">
+    <BottomNavItem btnName="Settings" href="/settings">
         <Sliders2Vertical
                 class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500"/>
     </BottomNavItem>
+
 </BottomNav>

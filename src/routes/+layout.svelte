@@ -37,9 +37,10 @@
     import Plus from 'svelte-bootstrap-svg-icons/Plus.svelte';
     import Search from 'svelte-bootstrap-svg-icons/Search.svelte';
     import Sliders2Vertical from 'svelte-bootstrap-svg-icons/Sliders2Vertical.svelte';
-    import { assemble_avatar_full_url } from '$lib';
+    import { assemble_avatar_full_url, pathname2title } from '$lib';
     import { dbb } from '$lib/dbb';
     import { onMount } from 'svelte';
+    import { PUBLIC_DISCOURSE_HOST } from '$env/static/public';
 
     let {children, data} = $props();
     let activeUrl = $state($page.url.pathname);
@@ -66,12 +67,14 @@
         let dbdc = await dbb.cache.toCollection().last();
         if (!dbdc || dbdc.api_key !== data.api_key) {
             dbb.cache.clear();
+            console.log(data.api_key);
             dbb.cache.add({api_key: data.api_key, api_username: data.user.username});
         }
     }
     onMount(async () => {
         await init_dbd_cache();
     });
+    let site_name = $derived(pathname2title($page.url.pathname));
 </script>
 <header class="sticky top-0 z-50 mx-auto w-full flex-none border-b border-gray-200 bg-gray-50 lg:pl-4 dark:border-gray-600 dark:bg-gray-950">
     <Navbar {navClass} hamburgerMenu={false} fluid div2Class="ml-auto w-full">
@@ -86,7 +89,7 @@
                           d="M1 1h15M1 7h15M1 13h15"/>
                 </svg>
             </button>
-            <NavBrand siteName="Svelte Forum">
+            <NavBrand siteName={site_name}>
                 <img width="30" src="/images/svelte-icon.png" alt="svelte icon"/>
             </NavBrand>
         {/snippet}
@@ -113,7 +116,7 @@
                               params={{ y: 0, duration: 200, easing: sineIn }}
                               class="absolute -left-[110px] top-[14px] md:-left-[160px] ">
                         <DropdownHeader class="px-4 py-2">
-                            <span class="block text-sm text-gray-900 dark:text-white">{data.user?.name}</span>
+                            <span class="block text-sm">{data.user?.name}</span>
                             <span class="block truncate text-sm font-medium">{data.user?.username}</span>
                         </DropdownHeader>
                         <DropdownUl>
@@ -135,8 +138,7 @@
         <!--only show NavUl on desktop, no NavHamburger on mobile-->
         <NavUl class="order-1 me-1 ms-1" {activeUrl}>
             <NavLi href="/">Home</NavLi>
-            <NavLi href="/NavLi1">NavLi1</NavLi>
-            <NavLi href="/NavLi2">NavLi2</NavLi>
+            <NavLi href={PUBLIC_DISCOURSE_HOST}>Peer</NavLi>
         </NavUl>
     </Navbar>
 </header>
@@ -176,7 +178,7 @@
 
     </Sidebar>
 
-    <main class="mx-auto min-w-0 max-w-8xl flex-auto px-8 pb-20 lg:static lg:max-h-full overflow-auto md:pl-72">
+    <main class="text-gray-900 dark:text-gray-100 mx-auto min-w-0 max-w-8xl flex-auto px-8 pb-20 lg:static lg:max-h-full overflow-auto md:pl-72">
         <div id="mainContent">
             {@render children()}
         </div>

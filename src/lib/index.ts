@@ -35,7 +35,7 @@ export async function post_url(url: string, body: string) {
 	const headers = {
 		'Content-Type': 'application/json',
 		'Api-Key': dbdc.api_key,
-		'Api-Username': dbdc.api_username
+		'Api-Username': encodeURIComponent(dbdc.api_username)
 	};
 
 	const response = await window.fetch(urlJoin(PUBLIC_DISCOURSE_HOST, url), {
@@ -55,7 +55,7 @@ export async function get_url(url: string, params = {}) {
 	const response = await fetch(u, {
 		headers: {
 			'Api-Key': dbdc.api_key,
-			'Api-Username': dbdc.api_username
+			'Api-Username': encodeURIComponent(dbdc.api_username)
 		}
 	});
 	return response;
@@ -223,10 +223,7 @@ export async function update_user_topics(username: string) {
 }
 
 export async function update_user_replies(username: string) {
-	let response = await get_url(
-		`/user_actions.json`,
-		{offset: 0, username: username, filter: 5}
-	);
+	let response = await get_url(`/user_actions.json`, { offset: 0, username: username, filter: 5 });
 	if (response.status === 200) {
 		response = await response.json();
 		let ret = [];
@@ -303,4 +300,8 @@ export async function get_avatar_url_by_username(username) {
 		});
 		return user.avatar_template;
 	}
+}
+
+export function pathname2title(pathname: string) {
+	return pathname.replaceAll('/', ' ');
 }

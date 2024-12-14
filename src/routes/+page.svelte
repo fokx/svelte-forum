@@ -26,19 +26,18 @@
 </script>
 
 {#await load_or_fetch_latest_topics()}
-	Loading...
+	<span>Loading...</span>
 	<Spinner class="me-3" size="4" color="teal" />
 
 {:then topics}
 	{#if topics.length > 0}
-		<h2>Latest Topics</h2>
 		<ul>
 			{#each topics as topic}
 				<Topic post={topic} />
 			{/each}
 		</ul>
 	{:else}
-		<p>No topics found</p>
+		<p class="text-gray-900 dark:text-white">No topics found</p>
 	{/if}
 {:catch error}
 	<p style="color: red">Error loading latest topics: {error.message}</p>

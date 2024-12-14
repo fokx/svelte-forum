@@ -31,8 +31,6 @@
 	}
 	let autosaveTimer;
 	let composerComponent;
-	const editor: LexicalEditor = getEditor();
-
 	async function submit_post() {
 		const editor = composerComponent.getEditor();
 		// let state = (JSON.stringify(editor.getEditorState()));
@@ -94,6 +92,9 @@
 	}
 	onMount(() => {
 		autosaveTimer = setInterval(() => {
+			if (!composerComponent) {
+				return;
+			}
 			const editor = composerComponent.getEditor();
 			let markdown;
 			editor.update(() => {

@@ -22,7 +22,6 @@
 		inside_topic = false
 	} = $props();
 	let composerComponent = $state();
-	const editor: LexicalEditor = getEditor();
 	let editing = $state(false);
 	let autosaveTimer;
 
@@ -144,12 +143,12 @@
 		<Card class="max-w-3xl mb-2">
 			{#if post.title}
 				<div class="flex justify-center">
-					<h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{post.title}</h5>
+					<h5 class="mb-2 text-2xl font-bold tracking-tight">{post.title}</h5>
 				</div>
 			{/if}
 			<div class="flex justify-between items-center mb-2">
 				<Avatar size="md" class="rotate-360 me-1 ms-3" src={assemble_avatar_full_url(post.avatar_template)} />
-				<h6 class="mt-4 text-md font-bold tracking-tight text-gray-900 dark:text-white">
+				<h6 class="mt-4 text-md font-bold tracking-tight">
 					{#if (post.updated_at - post.created_at) > 5 * 60 * 1000}
 						<div>updated at: {display_time(post.updated_at)}</div>
 					{:else}

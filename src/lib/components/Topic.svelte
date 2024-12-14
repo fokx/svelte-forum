@@ -36,12 +36,12 @@
 							{@render avatar_op(a_t)}
 						{/await}
 					{/if}
-					<h5 class="me-6 mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{post.title}</h5>
+					<h5 class="me-6 mb-2 text-2xl font-bold tracking-tight">{post.title}</h5>
 				</div>
 			{/if}
 			<div class="flex justify-between items-center mb-2">
 
-				<h6 class="me-4 mt-4 text-md font-bold tracking-tight text-gray-900 dark:text-white">
+				<h6 class="me-4 mt-4 text-md font-bold tracking-tight">
 					last posted: {display_time(post.last_posted_at)}
 				</h6>
 

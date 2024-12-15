@@ -49,7 +49,6 @@ export async function post_url(url: string, body: string) {
 
 export async function get_url(url: string, params = {}) {
 	const dbdc = await dbb.cache.toCollection().last();
-
 	const u = new URL(urlJoin(PUBLIC_DISCOURSE_HOST, url));
 	u.search = new URLSearchParams(params);
 	const response = await fetch(u, {
@@ -114,45 +113,72 @@ export async function update_local_categories() {
 	}
 }
 
-export async function update_local_topic(topic_id: number) {
+
+export async function update_local_topic_by_discourse_id(topic_id:number) {
 	let response = await get_url(`/t/${topic_id}.json`);
+	return await update_local_topic(response);
+}
+
+export async function update_local_topic_by_external_id(topic_external_id) {
+	let response = await get_url(`/t/external_id/${topic_external_id}.json`);
+	return await update_local_topic(response);
+}
+async function update_local_topic(response) {
 	if (response.status === 200) {
 		response = await response.json();
 		const posts = response.post_stream.posts;
-		const [main_post] = posts.filter((p) => p.post_number === 1);
-		const ret = [];
+		// const [main_post] = posts.filter((p) => p.post_number === 1);
+		const main_post_id = posts[0].external_id;
+		const posts_to_update = [];
 		for (const post of posts) {
+			const is_main_post = post.post_number === 1;
+			let reply_to_post_id = null;
+			let reply_to_post_number = null;
+			if (!is_main_post) {
+				if (post.reply_to_post_number === null) {
+					reply_to_post_id = main_post_id;
+					// when reply directly to original post, reply_to_post_number is null,
+					// which is not indexable by IndexedDB, see https://dexie.org/docs/Indexable-Type
+					reply_to_post_number = 1;
+				} else {
+					reply_to_post_id = posts.filter((p) => p.post_number === post.reply_to_post_number)[0]
+						?.external_id;
+					reply_to_post_number = post.reply_to_post_number;
+				}
+			}
 			const p = {
-				id: post.id,
+				id: post.external_id,
 				cooked: post.cooked,
 				post_number: post.post_number,
 				topic_id: post.topic_id,
-				reply_to_post_number: post.reply_to_post_number,
+				reply_to_post_number: reply_to_post_number,
 				reply_count: post.reply_count,
 				created_at: post.created_at,
 				deleted_at: post.deleted_at,
 				updated_at: post.updated_at,
-				is_main_post: post.post_number === 1,
-				main_post_id: main_post.id,
-				reply_to_post_id: posts.filter((p) => p.post_number === post.reply_to_post_number)[0]?.id,
+				is_main_post: is_main_post,
+				main_post_id: main_post_id,
+				reply_to_post_id: reply_to_post_id,
 				title: post.post_number === 1 ? response.title : null,
 				user_id: post.user_id,
 				// TODO: check how to remove this redundant info
 				username: post.username,
 				avatar_template: post.avatar_template
 			};
-			await dbb.posts.put(p);
-			ret.push(p);
+			posts_to_update.push(p);
 		}
-		return ret;
+		await dbb.posts.bulkPut(posts_to_update);
+		return posts_to_update;
 	}
 }
 
 async function update_topics(response) {
 	if (response.status === 200) {
 		response = await response.json();
+		let users_to_update = [];
+		let posts_to_update = [];
 		for (const user of response.users) {
-			await dbb.users.put({
+			users_to_update.push({
 				id: user.id,
 				username: user.username,
 				name: user.name,
@@ -173,25 +199,23 @@ async function update_topics(response) {
 			});
 		}
 		const topics = response.topic_list.topics;
-		let ret = [];
 		for (const topic of topics) {
 			let posters = topic.posters;
 			let original_poster = posters[0];
 			// TODO: add global id in Discourse
-			const id = GeneratePostId();
 			const p = {
-				id: id,
+				id: topic.external_id,
 				title: topic.title,
 				reply_count: topic.reply_count,
 				post_number: 1,
-				topic_id: topic.id,
+				topic_id: topic.external_id,
 				reply_to_post_number: null,
 				created_at: topic?.created_at,
 				deleted_at: topic?.deleted_at,
 				updated_at: topic?.updated_at,
-				// main_post_id: ,
+				main_post_id: topic.external_id,
 				is_main_post: true,
-				reply_to_post_id: id,
+				reply_to_post_id: null,
 				// user_id: topic.user_id,
 				// username: topic.username,
 				// avatar_template: topic.avatar_template,
@@ -205,10 +229,12 @@ async function update_topics(response) {
 				original_poster_user_id: original_poster?.user_id,
 				bumped_at: topic?.bumped_at
 			};
-			await dbb.posts.put(p);
-			ret.push(p);
+			// posts: '&id, topic_id, post_number, reply_to_post_number, last_posted_at', //[topic_id+post_number],[topic_id+reply_to_post_number],
+			posts_to_update.push(p);
 		}
-		return ret;
+		await dbb.users.bulkPut(users_to_update);
+		await dbb.posts.bulkPut(posts_to_update);
+		return posts_to_update;
 	}
 }
 
@@ -224,18 +250,17 @@ export async function update_user_topics(username: string) {
 
 export async function update_user_replies(username: string) {
 	let response = await get_url(`/user_actions.json`, { offset: 0, username: username, filter: 5 });
+	let posts_to_update = [];
 	if (response.status === 200) {
 		response = await response.json();
-		let ret = [];
 		for (const topic of response.user_actions) {
-			const id = GeneratePostId();
 			const p = {
-				id: id,
+				id: topic.external_id,
 				excerpt: topic?.excerpt,
 				title: topic.title,
 				reply_count: topic.reply_count,
 				post_number: topic.post_number,
-				topic_id: topic.id,
+				topic_id: topic.external_id,
 				reply_to_post_number: topic.reply_to_post_number,
 				created_at: topic?.created_at,
 				deleted_at: topic?.deleted_at,
@@ -255,9 +280,9 @@ export async function update_user_replies(username: string) {
 				acting_username: topic?.acting_username,
 				bumped_at: topic?.bumped_at
 			};
-			await dbb.posts.put(p);
-			ret.push(p);
+			posts_to_update.push(p);
 		}
+		await dbb.posts.bulkPut(posts_to_update);
 		return ret;
 	}
 }
@@ -304,4 +329,16 @@ export async function get_avatar_url_by_username(username) {
 
 export function pathname2title(pathname: string) {
 	return pathname.replaceAll('/', ' ');
+}
+
+export async function fetch_post_by_external_id(post_external_id) {
+	let response = await get_url(`/posts/by_external_id/${post_external_id}.json`);
+	console.log('/posts/by_external_id/',response);
+	if (response.status === 200) {
+		const post = await response.json();
+		// TODO: this add another round-trip to the server, which makes loading individual post slow
+		// don't await update_local_topic_by_discourse_id may mitigate this issue a bit
+		let topic_posts =  update_local_topic_by_discourse_id(post.topic_id);
+		return await dbb.posts.get(post_external_id);
+	}
 }

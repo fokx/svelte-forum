@@ -66,9 +66,8 @@
     async function init_dbd_cache() {
         let dbdc = await dbb.cache.toCollection().last();
         if (!dbdc || dbdc.api_key !== data.api_key) {
-            dbb.cache.clear();
-            console.log(data.api_key);
-            dbb.cache.add({api_key: data.api_key, api_username: data.user.username});
+            await dbb.cache.clear();
+            await dbb.cache.add({api_key: data.api_key, api_username: data.user.username});
         }
     }
     onMount(async () => {

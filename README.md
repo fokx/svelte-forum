@@ -13,7 +13,7 @@ host=mnz
 rsync -av --delete /f/svelte-forum $host:/srv/ --exclude={"*.db",".env","node_modules/*","build/*",".svelte-kit/*"}
 ssh $host chown -R discourse:discourse /srv/svelte-forum
 pnpm dev --port 4002
-cd /srv/svelte-forum; pnpm i && pnpm run build && pnpm db:push && lsof -i :4002|tail -1|awk "{print $2}"|xargs kill; sleep 1; HOST=127.0.0.1 PORT=4002 node build
+cd /srv/svelte-forum; pnpm i && pnpm run build && pnpm db:push && lsof -i :4002|tail -1|awk "{print $2}"|xargs kill; sleep 2; HOST=127.0.0.1 PORT=4002 node build
 
 rsync -av --delete /f/svelte-5-ui-lib $host:/srv/ --exclude={"*.db",".env","node_modules/*","build/*",".svelte-kit/*"}
 ssh $host chown -R discourse:discourse /srv/svelte-5-ui-lib
@@ -73,5 +73,6 @@ so that the *latest* draft can be recovered from browser crash or when user navi
 
 
 ## Bugs
+[ ] Load topic with very long posts, achieve infinite scroll
 [ ] When dark mode is toggled manually, it will cease after a full refresh. 
 [ ] RichTextComposer doesn't have dark mode

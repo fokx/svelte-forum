@@ -9,34 +9,30 @@
 	import '../../../app.css';
 	import { liveQuery } from 'dexie';
 	import { dbb } from '$lib/dbb';
+	import { browser } from '$app/environment';
 
 	let { data }: { data: PageData } = $props();
 	let threaded_view = $state(true);
-	console.log(data.params.level1);
+
 	let topic_posts = liveQuery(() =>
 		dbb.posts.filter(p => p.main_post_id === data.params.level1).toArray()
-			.then(a => a.sort((a,b) => a.post_number < b.post_number ? -1 : 1))
+			.then(a => a.sort((a, b) => a.post_number < b.post_number ? -1 : 1))
 	);
-	$effect(()=>{
-		console.log($topic_posts);
-	});
+	// $effect(()=>{
+	// 	console.log($topic_posts);
+	// });
 	async function load_or_fetch_topic_posts() {
 		let before = await dbb.posts.filter(p => p.main_post_id === data.params.level1).toArray();
-		console.log('before update, posts:', before);
 		let posts = await update_local_topic_by_external_id(data.params.level1);
-		console.log('after update, posts:', posts);
-		// let posts = [];
-		// if (browser) {
-		// 	posts = await dbb.posts.where('topic_id').equals(Number(data.params.level1)).toArray();
-		// 	if (posts.length > 0) {
-		// 		return posts;
-		// 	} else {
-		// 		posts = await update_local_topic_by_external_id(Number(data.params.level1));
-		// 	}
-		// }
 		return posts;
 	}
 
+	$effect(() => {
+		if (browser && $topic_posts && $topic_posts.length > 0) {
+			let title = $topic_posts[0].title;
+			dbb.rgv.put({ name: 'title', value: title });
+		}
+	});
 	onMount(() => {
 	});
 </script>

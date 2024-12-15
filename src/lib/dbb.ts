@@ -19,11 +19,12 @@ https://dexie.org/docs/Table/Table.filter()
 https://dexie.org/docs/Tutorial/Understanding-the-basics#primary-and-secondary-indexes
 https://dexie.org/cloud/docs/best-practices#examples-primary-keys
  */
-dbb.version(1).stores({
+dbb.version(2).stores({
 	posts: '&id, main_post_id, topic_id, post_number, reply_to_post_number, last_posted_at, reply_to_post_id', //[topic_id+post_number],[topic_id+reply_to_post_number],
 	users: '&id, username',
 	discourse_api_keys: '&id, user_id',
 	categories: '&id, name, slug',
 	draft_cache: '&url',
-	cache: '++, api_username, api_key'
+	cache: '++, api_username, api_key',
+	rgv: '&name', // reactive global variables
 });

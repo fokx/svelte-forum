@@ -120,7 +120,8 @@
 
 {#snippet post_data(post)}
 	<div class="flex-grow justify-center">
-		<Card class="max-w-3xl mb-2" href={`/p/${post.id}`}>
+		<Card class="max-w-3xl mb-2" >
+			<div><a class="text-blue-800 dark:text-blue-500 text-xl" href={`/p/${post.id}`}># {post.post_number}</a></div>
 			{#if post.title}
 				<div class="flex justify-center">
 					<h5 class="mb-2 text-2xl font-bold tracking-tight">{post.title}</h5>

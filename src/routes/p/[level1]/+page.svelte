@@ -4,10 +4,11 @@
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import Post from '$lib/components/Post.svelte';
-	import { fetch_post_by_external_id, update_local_topic_by_external_id } from '$lib';
+	import { convertHtmlToText, fetch_post_by_external_id, update_local_topic_by_external_id } from '$lib';
 	import { Spinner, Card} from 'svelte-5-ui-lib';
 	import '../../../app.css';
 	import { dbb } from '$lib/dbb';
+	import { browser } from '$app/environment';
 
 	let { data }: { data: PageData } = $props();
 	let threaded_view = $state(true);
@@ -17,14 +18,16 @@
 		if (_this_post === undefined || _this_post === null) {
 			_this_post = await fetch_post_by_external_id(data.params.level1);
 		} else {
-			// update all posts under this topic
-			let posts = await update_local_topic_by_external_id(_this_post.main_post_id);
+			// update all posts under this topic (in the background)
+			update_local_topic_by_external_id(_this_post.main_post_id);
+		}
+		if (browser && _this_post) {
+			let title = convertHtmlToText(_this_post.cooked);
+			dbb.rgv.put({ name: 'title', value: title });
 		}
 		return _this_post;
 	}
 
-	onMount(() => {
-	});
 </script>
 
 
@@ -34,13 +37,12 @@
 {:then this_post}
 	{#if this_post}
 		<Card
-			size="sm"
-			color="amber"
+			class="max-w-3xl mb-2 bg-[#ffdfa8] dark:bg-[#614B26FF]"
 			shadow="sm"
 			padding="sm"
 		>
 			<p>you are viewing a single comment's thread.</p>
-			<p><a style="color: blue" href={`/t/${this_post.main_post_id}`}>view the rest of the comments →</a></p>
+			<p><a class="text-blue-800 dark:text-blue-500" href={`/t/${this_post.main_post_id}`}>view the rest of the comments →</a></p>
 		</Card>
 		<Post post={this_post} expand={true} />
 	{/if}

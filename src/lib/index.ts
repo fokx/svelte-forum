@@ -149,6 +149,7 @@ async function update_local_topic(response) {
 			const p = {
 				id: post.external_id,
 				cooked: post.cooked,
+				raw: post.raw,
 				post_number: post.post_number,
 				topic_id: post.topic_id,
 				reply_to_post_number: reply_to_post_number,
@@ -327,9 +328,8 @@ export async function get_avatar_url_by_username(username) {
 	}
 }
 
-export function pathname2title(pathname: string) {
-	return pathname.replaceAll('/', ' ');
-}
+
+
 
 export async function fetch_post_by_external_id(post_external_id) {
 	let response = await get_url(`/posts/by_external_id/${post_external_id}.json`);
@@ -341,4 +341,8 @@ export async function fetch_post_by_external_id(post_external_id) {
 		let topic_posts =  update_local_topic_by_discourse_id(post.topic_id);
 		return await dbb.posts.get(post_external_id);
 	}
+}
+export function convertHtmlToText(html) {
+	const doc = new DOMParser().parseFromString(html, 'text/html');
+	return doc.body.innerText;
 }

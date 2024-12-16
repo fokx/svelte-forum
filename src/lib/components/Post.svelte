@@ -46,40 +46,43 @@
 			alert('Reply is empty!');
 			return;
 		}
+		let post_id = GeneratePostId();
 		let body = {
 			'raw': markdown,
 			'topic_id': post.topic_id,
-			'reply_to_post_number': post.post_number
+			'reply_to_post_number': post.post_number,
+			'external_id': post_id,
+			'reply_to_post_external_id': post.id
 		};
-		let post_id = GeneratePostId();
 		dbb.posts.add({
 			id: post_id,
 			raw: markdown,
-			reply_to_post_id: post.id,
 			// the following fields are not present in api response
 			reply_to_user_id: null,
 			is_main_post: false,
-			main_post_id: post.main_post_id
+			main_post_id: post.main_post_id,
+			reply_to_post_number: post.post_number,
+			reply_to_post_id: post.id,
+			synced_at: null,
 		});
 		let response = await post_url('/posts.json', JSON.stringify(body));
 		if (response.status === 200) {
-			alert('Post submitted successfully!');
+			// alert('Post submitted successfully!');
 			response = await response.json();
 			dbb.posts.update(post_id, {
 				cooked: response?.cooked,
 				post_number: response?.post_number,
 				topic_id: response?.topic_id,
 				user_id: response?.user_id,
-				reply_to_post_number: response?.reply_to_post_number,
 				reply_count: response?.reply_count,
 				created_at: response?.created_at,
 				deleted_at: response?.deleted_at,
-				updated_at: response?.updated_at
+				updated_at: response?.updated_at,
+				synced_at: new Date(),
 			});
 			if (autosaveTimer) {
 				clearInterval(autosaveTimer);
 			}
-			alert('Reply successfully!');
 		} else {
 			alert('Failed to submit post!');
 		}
@@ -120,7 +123,7 @@
 
 {#snippet post_data(post)}
 	<div class="flex-grow justify-center">
-		<Card class="max-w-3xl mb-2" >
+		<Card class="max-w-3xl" >
 			<div><a class="text-blue-800 dark:text-blue-500 text-xl" href={`/p/${post.id}`}># {post.post_number}</a></div>
 			{#if post.title}
 				<div class="flex justify-center">
@@ -172,9 +175,9 @@
 {/snippet}
 
 {#if post}
-	<div in:fly={{ y: 20 }} out:slide class="post" style="margin-left: { indent * 20}px;">
+	<div in:fly={{ y: 20 }} out:slide class="items-center relative" style="margin-left: { indent * 20}px;">
 		{#each Array(indent + 1) as _, j}
-			<div class="indent-line" style="left: {(j-indent) * 20 - 3}px;"></div>
+			<div class="absolute top-0 bottom-0 left-0 w-px bg-black opacity-20" style="left: {(j-indent) * 20 - 0}px;"></div>
 		{/each}
 		<div style="display:inline;">
 			{@render post_data(post)}

@@ -178,26 +178,31 @@ async function update_topics(response) {
 		response = await response.json();
 		let users_to_update = [];
 		let posts_to_update = [];
-		for (const user of response.users) {
-			users_to_update.push({
-				id: user.id,
-				username: user.username,
-				name: user.name,
-				admin: user.admin,
-				staged: user?.staged,
-				active: user?.active,
-				moderator: user.moderator,
-				trust_level: user.trust_level,
-				avatar_template: user.avatar_template,
-				animated_avatar: user?.animated_avatar,
-				flair_name: user?.flair_name,
-				title: user?.title,
-				groups: user?.groups,
-				locale: user?.locale,
-				silenced_till: user?.silenced_till,
-				created_at: user?.created_at,
-				updated_at: user?.updated_at
-			});
+		console.log(response);
+		console.log(response.users);
+		if (response.users) {
+			for (const user of response.users) {
+				users_to_update.push({
+					id: user.id,
+					username: user.username,
+					name: user.name,
+					admin: user.admin,
+					staged: user?.staged,
+					active: user?.active,
+					moderator: user.moderator,
+					trust_level: user.trust_level,
+					avatar_template: user.avatar_template,
+					animated_avatar: user?.animated_avatar,
+					flair_name: user?.flair_name,
+					title: user?.title,
+					groups: user?.groups,
+					locale: user?.locale,
+					silenced_till: user?.silenced_till,
+					created_at: user?.created_at,
+					updated_at: user?.updated_at
+				});
+			}
+
 		}
 		const topics = response.topic_list.topics;
 		for (const topic of topics) {
@@ -250,41 +255,42 @@ export async function update_user_topics(username: string) {
 }
 
 export async function update_user_replies(username: string) {
+	// https://github.com/discourse/discourse/blob/334a2f216f0c365d97bd3d390ca89f195aea9323/app/models/user_action.rb#L16
 	let response = await get_url(`/user_actions.json`, { offset: 0, username: username, filter: 5 });
 	let posts_to_update = [];
 	if (response.status === 200) {
 		response = await response.json();
-		for (const topic of response.user_actions) {
+		for (const reply of response.user_actions) {
 			const p = {
-				id: topic.external_id,
-				excerpt: topic?.excerpt,
-				title: topic.title,
-				reply_count: topic.reply_count,
-				post_number: topic.post_number,
-				topic_id: topic.external_id,
-				reply_to_post_number: topic.reply_to_post_number,
-				created_at: topic?.created_at,
-				deleted_at: topic?.deleted_at,
-				updated_at: topic?.updated_at,
+				id: reply.external_id,
+				excerpt: reply?.excerpt,
+				title: reply.title,
+				reply_count: reply.reply_count,
+				post_number: reply.post_number,
+				reply_id: reply.reply_id,
+				reply_to_post_number: reply.reply_to_post_number,
+				created_at: reply?.created_at,
+				deleted_at: reply?.deleted_at,
+				updated_at: reply?.updated_at,
 				// main_post_id: ,
-				is_main_post: true,
-				reply_to_post_id: topic.post_id,
-				// user_id: topic.user_id,
-				// username: topic.username,
-				// avatar_template: topic.avatar_template,
-				/// topic specic field
-				fancy_title: topic?.fancy_title,
-				posts_count: topic?.posts_count,
-				image_url: topic?.image_url,
-				last_posted_at: topic?.last_posted_at,
-				last_poster_username: topic?.last_poster_username,
-				acting_username: topic?.acting_username,
-				bumped_at: topic?.bumped_at
+				is_main_post: reply.post_number === 1,
+				reply_to_post_id: reply?.reply_to_post_external_id,
+				// user_id: reply.user_id,
+				// username: reply.username,
+				// avatar_template: reply.avatar_template,
+				/// reply specic field
+				// fancy_title: reply?.fancy_title,
+				// posts_count: reply?.posts_count,
+				// image_url: reply?.image_url,
+				// last_posted_at: reply?.last_posted_at,
+				// last_poster_username: reply?.last_poster_username,
+				acting_username: reply?.acting_username,
+				// bumped_at: reply?.bumped_at
 			};
 			posts_to_update.push(p);
 		}
 		await dbb.posts.bulkPut(posts_to_update);
-		return ret;
+		return posts_to_update;
 	}
 }
 

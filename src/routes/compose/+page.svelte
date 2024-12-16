@@ -58,17 +58,19 @@
 			raw: markdown,
 			title: title,
 			// the following fields are not present in api response
-			reply_to_user_id: null,
 			// like_count: response?.like_count,
 			// word_count: response?.word_count,
 			// deleted: response?.deleted,
+			reply_to_user_id: null,
 			is_main_post: true,
 			main_post_id: post_id,
-			reply_to_post_id: post_id,
+			reply_to_post_number: null,
+			reply_to_post_id: null,
+			synced_at: null,
 		})
 		let response = await post_url('/posts.json', JSON.stringify(body));
 		if (response.status === 200) {
-			alert('Post submitted successfully!');
+			// alert('Post submitted successfully!');
 			response = await response.json();
 			console.log(response);
 			dbb.posts.update(post_id, {
@@ -76,16 +78,16 @@
 				post_number: response?.post_number,
 				topic_id: response?.topic_id,
 				user_id: response?.user_id,
-				reply_to_post_number: response?.reply_to_post_number,
 				reply_count: response?.reply_count,
 				created_at: response?.created_at,
 				deleted_at: response?.deleted_at,
 				updated_at: response?.updated_at,
+				synced_at: new Date(),
 			});
-			if (autosaveTimer){
+			if (autosaveTimer) {
 				clearInterval(autosaveTimer);
 			}
-			goto(`/t/${response.topic_id}`);
+			goto(`/t/${post_id}`);
 		} else {
 			alert('Failed to submit post!');
 		}

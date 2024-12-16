@@ -1,59 +1,92 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { browser } from '$app/environment';
 	import { dbb } from '$lib/dbb';
-	import { update_latest_topics } from '$lib';
+	import { scrollable_main_class, update_latest_topics } from '$lib';
 	import Topic from '$lib/components/Topic.svelte';
-	import Post from '$lib/components/Post.svelte';
 	import { Spinner } from 'svelte-5-ui-lib';
 	import { liveQuery } from 'dexie';
+	import { onMount, tick } from 'svelte';
 
 	let { data }: { data: PageData } = $props();
-
 	let latest_topics = liveQuery(() =>
 		dbb.posts.orderBy('last_posted_at').filter(p => p.post_number === 1).desc().toArray()
 	);
+
 	async function load_or_fetch_latest_topics() {
-		// TODO: check latest is updated in Discourse and fetch latest data
-		// TODO: infinite scroll
 		let topics = await update_latest_topics();
-		// let topics = [];
-		// if (browser) {
-		// 	topics = await dbb.posts.where('post_number').equals(1).limit(50).toArray();
-		// 	if (topics.length > 0) {
-		// 		return topics;
-		// 	} else {
-		// 		topics = await update_latest_topics();
-		// 	}
-		// }
 		return topics;
 	}
+
+	let page_to_fetch: number;
+	let loading_new_page: boolean = $state(false);
+	let viewport: HTMLElement;
+
+	const alarm = {
+		remind(aMessage) {
+			if (viewport && viewport.offsetHeight + viewport.scrollTop > viewport.scrollHeight - 50) {
+				console.log('Scrolled to page', page_to_fetch, 'fetching in background');
+				viewport.scrollTop -= 60;
+				// viewport.scrollTo(0, viewport.scrollHeight - 60);
+				update_latest_topics(page_to_fetch);
+				page_to_fetch += 1;
+			}
+			tick().then(() => {
+				console.log('page updated', page_to_fetch);
+			});
+			loading_new_page = false;
+			this.timeoutID = undefined;
+		},
+
+		setup() {
+			if (typeof this.timeoutID === 'number') {
+				this.cancel();
+			}
+			loading_new_page = true;
+
+			this.timeoutID = setTimeout(
+				(msg) => {
+					this.remind(msg);
+				},
+				2500,
+				'alarm msg'
+			);
+		},
+
+		cancel() {
+			clearTimeout(this.timeoutID);
+		}
+	};
+
+	onMount(() => {
+		page_to_fetch = 2;
+		viewport.addEventListener('scroll', () => alarm.setup());
+	});
+
 </script>
 
-{#await load_or_fetch_latest_topics()}
-	<span>Fetching...</span>
+{#snippet loading(text = 'loading')}
+	<span>{text}</span>
 	<Spinner class="me-3" size="4" color="teal" />
+{/snippet}
+{#await load_or_fetch_latest_topics()}
+	{@render loading('Updating latest topics')}
 {:then topics}
-<!--	<span>Update finished</span>-->
-	<!--{#if topics.length > 0}-->
-	<!--	<ul>-->
-	<!--		{#each topics as topic}-->
-	<!--			<Topic post={topic} />-->
-	<!--		{/each}-->
-	<!--	</ul>-->
-	<!--{:else}-->
-	<!--	<p class="text-gray-900 dark:text-white">No topics found</p>-->
-	<!--{/if}-->
+	Last updated at {new Date().toLocaleString()}
 {:catch error}
 	<p style="color: red">Error loading latest topics: {error.message}</p>
 {/await}
 
-{#if $latest_topics && $latest_topics.length > 0}
-	<ul>
-		{#each $latest_topics as topic}
-			<Topic post={topic} />
-		{/each}
-	</ul>
-{:else}
-	<p class="text-gray-900 dark:text-white">No topics found</p>
-{/if}
+<div class={scrollable_main_class} id="scrollable-element" bind:this={viewport}>
+	{#if $latest_topics && $latest_topics.length > 0}
+		<ul>
+			{#each $latest_topics as topic}
+				<Topic post={topic} />
+			{/each}
+		</ul>
+		{#if loading_new_page}
+			{@render loading(`Fetching new topics on page ${page_to_fetch}`)}
+		{/if}
+	{:else}
+		<p class="text-gray-900 dark:text-white">No topics found</p>
+	{/if}
+</div>

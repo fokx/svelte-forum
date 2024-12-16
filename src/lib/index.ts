@@ -120,7 +120,7 @@ export async function update_local_topic_by_discourse_id(topic_id:number) {
 }
 
 export async function update_local_topic_by_external_id(topic_external_id) {
-	let response = await get_url(`/t/external_id/${topic_external_id}.json`);
+	let response = await get_url(`/t/external_id/${topic_external_id}.json`, {print: true});
 	return await update_local_topic(response);
 }
 async function update_local_topic(response) {
@@ -350,4 +350,9 @@ export async function fetch_post_by_external_id(post_external_id) {
 export function convertHtmlToText(html) {
 	const doc = new DOMParser().parseFromString(html, 'text/html');
 	return doc.body.innerText;
+}
+
+export const scrollable_main_class= 'h-[90vh] max-sm:h-[87vh] mt-[3vh] overflow-y-scroll';
+export function sleep_ms(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms ?? 200));
 }

@@ -13,18 +13,15 @@ host=mnz
 rsync -av --delete /f/svelte-forum $host:/srv/ --exclude={"*.db",".env","node_modules/*","build/*",".svelte-kit/*"}
 ssh $host chown -R discourse:discourse /srv/svelte-forum
 pnpm dev --port 4002
-cd /srv/svelte-forum; pnpm i && pnpm run build && pnpm db:push && lsof -i :4002|tail -1|awk '{print $2}'|xargs kill; sleep 2; HOST=127.0.0.1 PORT=4002 node build
+cd /srv/svelte-forum; pnpm i && pnpm run build && pnpm db:push && lsof -i :4002|tail -1|awk '{print $2}'|xargs kill; sleep 1; HOST=127.0.0.1 PORT=4002 node build
 
 rsync -av --delete /f/svelte-5-ui-lib $host:/srv/ --exclude={"*.db",".env","node_modules/*","build/*",".svelte-kit/*"}
 ssh $host chown -R discourse:discourse /srv/svelte-5-ui-lib
 cd /srv/svelte-5-ui-lib; pnpm i && pnpm build && pnpm package
 
-
 rsync -av --delete /f/svelte-lexical $host:/srv/ --exclude={"*.db",".env","node_modules/*","build/*",".svelte-kit/*"}
 ssh $host chown -R discourse:discourse /srv/svelte-lexical
 cd /srv/svelte-lexical; pnpm i; cd packages/svelte-lexical; pnpm build
-
-
 
 ```
 
@@ -46,7 +43,7 @@ import { dbb } from '$lib/dbb';
 import { browser } from '$app/environment';
 let topic_posts = $state([]);
 if (browser){
-	topic_posts= dbb.posts.where("topic_id").equals(Number(data.params.level2)).toArray();
+	topic_posts= dbb.posts.where("topic_id").equals('xxx').toArray();
 }
 ```
 
@@ -68,11 +65,32 @@ https://meta.discourse.org/t/are-custom-fields-on-posts-topics-available-via-the
 
 [ ] Draft is saved in browser IndexedDB periodically 
 so that the *latest* draft can be recovered from browser crash or when user navigates to other page
+see also:
+https://svelte.dev/docs/kit/snapshots
 
 [x] categories cached in browser, manual refresh in user settings
 
-
 ## Bugs
-[ ] Load topic with very long posts, achieve infinite scroll
-[x] When dark mode is toggled manually, it will cease after a full refresh. 
-[ ] RichTextComposer doesn't have dark mode
+[x] Load topic with very long posts, achieve infinite scroll
+implemented but has minor pitfalls: 
+
+* when user has previously scrolled to bottom several times (let's say have fetched page 2, 3, 4),
+after a refresh, when scroll to bottom again, will start by fetching page 2 again.
+    
+* Loading large amount of posts on homepage can be slow.
+Maybe we need pagination like a conventional forum and add new routes: /page/{i}
+
+[x] When dark mode is toggled manually, it will cease after a full refresh.
+
+[ ] RichTextComposer doesn't have a dark look 
+
+[ ] Preserve scroll positions when navigating back and forth between topic list and topic
+1. preserve topic position in list
+2. preserve post position in topic
+see also:
+https://svelte.dev/docs/kit/snapshots
+
+[ ] In topic, when click reply button, the composer may be displayed outside of visible area,
+should scroll down a little bit, and focus on the composer.
+
+[ ] Allow submitting the composer by [Ctrl+Enter]

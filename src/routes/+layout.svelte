@@ -210,7 +210,7 @@
 	</Sidebar>
 
 	<main
-		id="mainContent" class="h-[92vh] max-sm:h-[87vh] mt-[3vh] overflow-y-scroll text-gray-900 dark:text-gray-100 mx-auto min-w-0 max-w-8xl flex-auto px-8 pb-20 lg:static lg:max-h-full overflow-auto md:pl-72">
+		id="mainContent" class="text-gray-900 dark:text-gray-100 mx-auto min-w-0 max-w-8xl flex-auto px-8 pb-20 lg:static lg:max-h-full overflow-auto md:pl-72">
 			{@render children()}
 	</main>
 </div>

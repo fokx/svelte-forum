@@ -74,5 +74,5 @@ so that the *latest* draft can be recovered from browser crash or when user navi
 
 ## Bugs
 [ ] Load topic with very long posts, achieve infinite scroll
-[ ] When dark mode is toggled manually, it will cease after a full refresh. 
+[x] When dark mode is toggled manually, it will cease after a full refresh. 
 [ ] RichTextComposer doesn't have dark mode

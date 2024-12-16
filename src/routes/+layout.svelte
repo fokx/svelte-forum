@@ -107,7 +107,7 @@
 	let site_name = $derived(pathname2title($page.url.pathname));
 </script>
 <header
-	class="sticky top-0 z-50 mx-auto w-full flex-none border-b border-gray-200 bg-gray-50 lg:pl-4 dark:border-gray-600 dark:bg-gray-950">
+	class="h-[3vh] sticky top-0 z-50 mx-auto w-full flex-none border-b border-gray-200 bg-gray-50 lg:pl-4 dark:border-gray-600 dark:bg-gray-950">
 	<Navbar {navClass} hamburgerMenu={false} fluid div2Class="ml-auto w-full">
 		{#snippet brand()}
 			<button onclick={demoSidebarUi.toggle} type="button" class="z-50 mr-4 mt-1 md:hidden"
@@ -210,15 +210,13 @@
 	</Sidebar>
 
 	<main
-		class="text-gray-900 dark:text-gray-100 mx-auto min-w-0 max-w-8xl flex-auto px-8 pb-20 lg:static lg:max-h-full overflow-auto md:pl-72">
-		<div id="mainContent">
+		id="mainContent" class="h-[92vh] max-sm:h-[87vh] mt-[3vh] overflow-y-scroll text-gray-900 dark:text-gray-100 mx-auto min-w-0 max-w-8xl flex-auto px-8 pb-20 lg:static lg:max-h-full overflow-auto md:pl-72">
 			{@render children()}
-		</div>
 	</main>
 </div>
 
 <!--only show BottomNav on mobile-->
-<BottomNav outerClass="hidden max-sm:block" position="fixed" navType="group" innerClass="grid-cols-5">
+<BottomNav outerClass="hidden max-sm:block h-[7vh]" position="fixed" navType="group" innerClass="grid-cols-5">
 	<!--{#snippet header()}-->
 	<!--    <BottomNavHeader>-->
 	<!--        <BottomNavHeaderItem itemName="New"/>-->

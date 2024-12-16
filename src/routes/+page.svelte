@@ -49,11 +49,11 @@
 {/await}
 
 {#if $latest_topics && $latest_topics.length > 0}
-		<ul>
-			{#each $latest_topics as topic}
-				<Topic post={topic} />
-			{/each}
-		</ul>
+	<ul>
+		{#each $latest_topics as topic}
+			<Topic post={topic} />
+		{/each}
+	</ul>
 {:else}
-		<p class="text-gray-900 dark:text-white">No topics found</p>
+	<p class="text-gray-900 dark:text-white">No topics found</p>
 {/if}

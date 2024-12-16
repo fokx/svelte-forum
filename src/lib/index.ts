@@ -243,9 +243,8 @@ async function update_topics(response) {
 		return posts_to_update;
 	}
 }
-
-export async function update_latest_topics() {
-	let response = await get_url(`/latest.json`);
+export async function update_latest_topics(page=1) {
+	let response = await get_url(`/latest.json`, { no_definitions: true, page: page });
 	return await update_topics(response);
 }
 

@@ -2,27 +2,22 @@
 	import {
 		Avatar,
 		BottomNav,
-		BottomNavHeader,
-		BottomNavHeaderItem,
 		BottomNavItem,
-		Tooltip,
-		Button,
+		Darkmode,
 		Dropdown,
+		DropdownFooter,
+		DropdownHeader,
 		DropdownLi,
 		DropdownUl,
-		Input,
 		Navbar,
 		NavBrand,
 		NavLi,
 		NavUl,
+		Sidebar,
+		SidebarDropdownWrapper,
 		SidebarGroup,
 		SidebarItem,
-		DropdownFooter,
-		uiHelpers,
-		SidebarDropdownWrapper,
-		Darkmode,
-		Sidebar,
-		DropdownHeader
+		uiHelpers
 	} from 'svelte-5-ui-lib';
 	import { page } from '$app/stores';
 	import { sineIn } from 'svelte/easing';
@@ -34,7 +29,6 @@
 	import PencilSquare from 'svelte-bootstrap-svg-icons/PencilSquare.svelte';
 	import PersonFill from 'svelte-bootstrap-svg-icons/PersonFill.svelte';
 	import Plus from 'svelte-bootstrap-svg-icons/Plus.svelte';
-	import Search from 'svelte-bootstrap-svg-icons/Search.svelte';
 	import Sliders2Vertical from 'svelte-bootstrap-svg-icons/Sliders2Vertical.svelte';
 	import { assemble_avatar_full_url } from '$lib';
 	import { dbb } from '$lib/dbb';
@@ -63,7 +57,6 @@
 		activeUrl = $page.url.pathname;
 		isDemoOpen = demoSidebarUi.isOpen;
 	});
-	let navClass = 'w-full divide-gray-200 border-gray-200 bg-gray-50 dark_bg_theme text-gray-500 dark:divide-gray-700 dark:border-gray-700 dark:transparent dark:text-gray-400 sm:px-4';
 
 	function toggleDarkMode(event) {
 		let target = event.target;
@@ -87,18 +80,18 @@
 		let title: string;
 		if (pathname === '/') {
 			title = PUBLIC_SITE_TITLE;
-		} else{
+		} else {
 			title = pathname.replaceAll('/', ' ');
 			if (browser && $grv_title?.value && (pathname.startsWith('/t/') || pathname.startsWith('/p/'))) {
-					title = $grv_title?.value;
+				title = $grv_title?.value;
 			}
-			if (title.length > parseInt(PUBLIC_TITLE_SLICE_LENGTH)){
+			if (title.length > parseInt(PUBLIC_TITLE_SLICE_LENGTH)) {
 				title = title.slice(0, parseInt(PUBLIC_TITLE_SLICE_LENGTH)) + '...';
 			}
 			title += ' - ' + PUBLIC_SITE_TITLE;
 		}
 
-		if (browser){
+		if (browser) {
 			document.title = title;
 		}
 		return title;
@@ -107,8 +100,8 @@
 	let site_name = $derived(pathname2title($page.url.pathname));
 </script>
 <header
-	class="h-[3vh] sticky top-0 z-50 mx-auto w-full flex-none border-b border-gray-200 bg-gray-50 lg:pl-4 dark:border-gray-600 dark:bg-gray-950">
-	<Navbar {navClass} hamburgerMenu={false} fluid div2Class="ml-auto w-full">
+	class="sticky top-0 z-50 mx-auto w-full flex-none border-b border-gray-200 bg-gray-50 lg:pl-4 dark:border-gray-600 dark:bg-gray-950">
+	<Navbar divClass="h-[5vh]" navClass="w-full divide-gray-200 border-gray-200 bg-gray-50 dark_bg_theme text-gray-500 dark:divide-gray-700 dark:border-gray-700 dark:transparent dark:text-gray-400 sm:px-4" hamburgerMenu={false} fluid div2Class="ml-auto w-full">
 		{#snippet brand()}
 			<button onclick={demoSidebarUi.toggle} type="button" class="z-50 mr-4 mt-1 md:hidden"
 							aria-controls="sidebar"
@@ -121,7 +114,7 @@
 				</svg>
 			</button>
 			<NavBrand siteName={site_name} spanClass="text-xs sm:text-xs md:text-xl lg:text-xl">
-				<img width="30" src="/images/svelte-icon.png" alt="site icon"/>
+				<img width="30" src="/images/svelte-icon.png" alt="site icon" />
 			</NavBrand>
 		{/snippet}
 		{#snippet navSlotBlock()}
@@ -210,13 +203,15 @@
 	</Sidebar>
 
 	<main
-		id="mainContent" class="text-gray-900 dark:text-gray-100 mx-auto min-w-0 max-w-8xl flex-auto px-8 pb-20 lg:static lg:max-h-full overflow-auto md:pl-72">
+		class="text-gray-900 dark:text-gray-100 mx-auto min-w-0 max-w-8xl flex-auto px-8 pb-20 lg:static lg:max-h-full overflow-auto md:pl-72">
+		<div id="mainContent" class="mt-[1vh]">
 			{@render children()}
+		</div>
 	</main>
 </div>
 
 <!--only show BottomNav on mobile-->
-<BottomNav outerClass="hidden max-sm:block h-[7vh]" position="fixed" navType="group" innerClass="grid-cols-5">
+<BottomNav outerClass="hidden max-sm:block h-[8vh]" position="fixed" navType="group" innerClass="grid-cols-5">
 	<!--{#snippet header()}-->
 	<!--    <BottomNavHeader>-->
 	<!--        <BottomNavHeaderItem itemName="New"/>-->

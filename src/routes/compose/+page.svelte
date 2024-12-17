@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Label, Textarea, Select, Skeleton, ImagePlaceholder } from 'svelte-5-ui-lib';
-	import type { LexicalEditor } from 'svelte-lexical';
-	import { convertToMarkdownString, getEditor, PLAYGROUND_TRANSFORMERS } from 'svelte-lexical';
+	import { ImagePlaceholder, Label, Select, Skeleton, Textarea } from 'svelte-5-ui-lib';
+	import { convertToMarkdownString, PLAYGROUND_TRANSFORMERS } from 'svelte-lexical';
 	import RichTextComposer from '$lib/components/MyRichTextComposer.svelte';
 	// import {RichTextComposer} from 'svelte-lexical';
 	import type { PageData } from './$types';
 	import '../../app.css';
 	import Send from 'svelte-bootstrap-svg-icons/Send.svelte';
-	import { GeneratePostId, get_url, post_url, update_local_categories } from '$lib';
+	import { GeneratePostId, post_url, update_local_categories } from '$lib';
 	import { goto } from '$app/navigation';
 	import { PUBLIC_MAX_TITLE_LENGTH } from '$env/static/public';
 	import { dbb } from '$lib/dbb';
@@ -29,8 +28,10 @@
 			return await dbb.categories.toArray();
 		}
 	}
+
 	let autosaveTimer;
 	let composerComponent;
+
 	async function submit_post() {
 		const editor = composerComponent.getEditor();
 		// let state = (JSON.stringify(editor.getEditorState()));
@@ -51,7 +52,7 @@
 			'title': title,
 			'raw': markdown,
 			'category': category,
-			'external_id': post_id,
+			'external_id': post_id
 		};
 		dbb.posts.add({
 			id: post_id,
@@ -66,8 +67,8 @@
 			main_post_id: post_id,
 			reply_to_post_number: null,
 			reply_to_post_id: null,
-			synced_at: null,
-		})
+			synced_at: null
+		});
 		let response = await post_url('/posts.json', JSON.stringify(body));
 		if (response.status === 200) {
 			// alert('Post submitted successfully!');
@@ -82,7 +83,7 @@
 				created_at: response?.created_at,
 				deleted_at: response?.deleted_at,
 				updated_at: response?.updated_at,
-				synced_at: new Date(),
+				synced_at: new Date()
 			});
 			if (autosaveTimer) {
 				clearInterval(autosaveTimer);
@@ -92,6 +93,7 @@
 			alert('Failed to submit post!');
 		}
 	}
+
 	onMount(() => {
 		autosaveTimer = setInterval(() => {
 			if (!composerComponent) {
@@ -106,48 +108,44 @@
 					true
 				);
 			});
-			dbb.draft_cache.put({url: window.location.pathname, markdown: markdown, title: title});
+			dbb.draft_cache.put({ url: window.location.pathname, markdown: markdown, title: title });
 			// TODO: load draft from cache when composer mounted
 		}, 5000);
 	});
 
 </script>
-
-<form class="flex items-center space-x-4">
-	<div class="flex-1">
+<div>
+	<form class="flex items-center space-x-4">
+		<div class="flex-1">
 		<Textarea bind:value={title} id="title" class="bg-white dark:bg-gray-800 w-full" rows={1}
 							placeholder="Title (max {PUBLIC_MAX_TITLE_LENGTH})..." maxlength={PUBLIC_MAX_TITLE_LENGTH} />
-	</div>
-	<div class="w-24">
-		<Label for="categories" class="mt-2">category:</Label>
-		<Select id="categories" class="mt-2" bind:value={category} placeholder="">
-			{#await get_local_categories_fetch_if_not_exists()}
-				<option value={DEFAULT_CATEGORY_ID}>Default</option>
-			{:then categories}
-				{#each categories as cat}
-					<option selected={cat.id===DEFAULT_CATEGORY_ID} value={cat.id} style="color:#{cat.color}">{cat.name}</option>
-				{/each}
-			{:catch error}
-				<p style="color: red">can not fetch category info: {error.message}</p>
-			{/await}
-		</Select>
-	</div>
-</form>
+		</div>
+		<div class="w-24">
+			<Label for="categories" class="mt-2">category:</Label>
+			<Select id="categories" class="mt-2" bind:value={category} placeholder="">
+				{#await get_local_categories_fetch_if_not_exists()}
+					<option value={DEFAULT_CATEGORY_ID}>Default</option>
+				{:then categories}
+					{#each categories as cat}
+						<option selected={cat.id===DEFAULT_CATEGORY_ID} value={cat.id}
+										style="color:#{cat.color}">{cat.name}</option>
+					{/each}
+				{:catch error}
+					<p style="color: red">can not fetch category info: {error.message}</p>
+				{/await}
+			</Select>
+		</div>
+	</form>
 
+	<RichTextComposer bind:this={composerComponent} />
+	<div class="actionbar">
+		<button
+			class="action-button submit"
+			onclick={() =>submit_post()}
+			title="Submit"
+			aria-label="Submit editor state">
+			<Send />
+		</button>
+	</div>
 
-<RichTextComposer bind:this={composerComponent} />
-<div class="actionbar">
-	<button
-		class="action-button submit"
-		onclick={() =>submit_post()}
-		title="Submit"
-		aria-label="Submit editor state">
-		<Send />
-	</button>
 </div>
-
-<Skeleton class="py-4"/>
-<ImagePlaceholder class="my-8"/>
-<Skeleton class="py-4"/>
-<Skeleton class="mb-8 mt-16"/>
-<ImagePlaceholder class="my-8"/>

@@ -178,8 +178,6 @@ async function update_topics(response) {
 		response = await response.json();
 		let users_to_update = [];
 		let posts_to_update = [];
-		console.log(response);
-		console.log(response.users);
 		if (response.users) {
 			for (const user of response.users) {
 				users_to_update.push({
@@ -338,7 +336,6 @@ export async function get_avatar_url_by_username(username) {
 
 export async function fetch_post_by_external_id(post_external_id) {
 	let response = await get_url(`/posts/by_external_id/${post_external_id}.json`);
-	console.log('/posts/by_external_id/',response);
 	if (response.status === 200) {
 		const post = await response.json();
 		// TODO: this add another round-trip to the server, which makes loading individual post slow
@@ -352,7 +349,8 @@ export function convertHtmlToText(html) {
 	return doc.body.innerText;
 }
 
-export const scrollable_main_class= 'h-[90vh] max-sm:h-[87vh] mt-[3vh] overflow-y-scroll';
+export const scrollable_main_class= 'h-[82vh] max-sm:h-[80vh] overflow-y-scroll';
 export function sleep_ms(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms ?? 200));
 }
+

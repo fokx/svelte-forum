@@ -20,7 +20,6 @@
 
 {:then topics}
 	{#if topics.length > 0}
-		<h2>User Topics</h2>
 		<ul>
 			{#each topics as topic}
 				<Topic post={topic} />

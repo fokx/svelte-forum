@@ -18,9 +18,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		if (event.locals.user && event.locals.user.id !== user.id) {
 			event.locals.api_key = undefined;
 		}
-
 		event.locals.user = user;
-
 		if (event.locals.api_key === undefined) {
 			const result = await dbs
 				.select()

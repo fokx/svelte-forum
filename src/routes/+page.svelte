@@ -20,6 +20,12 @@
 	let page_to_fetch: number;
 	let loading_new_page: boolean = $state(false);
 	let viewport: HTMLElement;
+	let last_updated_date:Date=$state(new Date());
+
+	onMount(() => {
+		page_to_fetch = 2;
+		viewport.addEventListener('scroll', () => alarm.setup());
+	});
 
 	const alarm = {
 		remind(aMessage) {
@@ -33,6 +39,7 @@
 			tick().then(() => {
 				console.log('page updated', page_to_fetch);
 			});
+			last_updated_date = new Date();
 			loading_new_page = false;
 			this.timeoutID = undefined;
 		},
@@ -41,15 +48,17 @@
 			if (typeof this.timeoutID === 'number') {
 				this.cancel();
 			}
-			loading_new_page = true;
-
-			this.timeoutID = setTimeout(
-				(msg) => {
-					this.remind(msg);
-				},
-				2500,
-				'alarm msg'
-			);
+			if (viewport && viewport.offsetHeight + viewport.scrollTop > viewport.scrollHeight - 50) {
+				console.log('fired');
+				loading_new_page = true;
+				this.timeoutID = setTimeout(
+					(msg) => {
+						this.remind(msg);
+					},
+					2500,
+					'alarm msg'
+				);
+			}
 		},
 
 		cancel() {
@@ -57,35 +66,37 @@
 		}
 	};
 
-	onMount(() => {
-		page_to_fetch = 2;
-		viewport.addEventListener('scroll', () => alarm.setup());
-	});
 
 </script>
 
 {#snippet loading(text = 'loading')}
-	<span>{text}</span>
-	<Spinner class="me-3" size="4" color="teal" />
+	<p>
+		<span>{text}</span>
+		<Spinner class="me-3" size="4" color="teal" />
+	</p>
 {/snippet}
 {#await load_or_fetch_latest_topics()}
-	{@render loading('Updating latest topics')}
-{:then topics}
-	Last updated at {new Date().toLocaleString()}
-{:catch error}
-	<p style="color: red">Error loading latest topics: {error.message}</p>
+	<!--{@render loading('Updating latest topics')}-->
+<!--{:then topics}-->
+<!--	<p>Last updated at {last_updated_date.toLocaleString()}</p>-->
+<!--{:catch error}-->
+<!--	<p style="color: red">Error loading latest topics: {error.message}</p>-->
 {/await}
+
+{#if loading_new_page}
+	{@render loading(`Fetching new topics on page ${page_to_fetch}`)}
+{:else}
+	<p>Last updated at {last_updated_date.toLocaleString()}</p>
+{/if}
 
 <div class={scrollable_main_class} id="scrollable-element" bind:this={viewport}>
 	{#if $latest_topics && $latest_topics.length > 0}
+
 		<ul>
 			{#each $latest_topics as topic}
 				<Topic post={topic} />
 			{/each}
 		</ul>
-		{#if loading_new_page}
-			{@render loading(`Fetching new topics on page ${page_to_fetch}`)}
-		{/if}
 	{:else}
 		<p class="text-gray-900 dark:text-white">No topics found</p>
 	{/if}

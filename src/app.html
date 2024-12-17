@@ -7,11 +7,13 @@
 	%sveltekit.head%
 	<script>
 		function updateDarkMode() {
-			if ("THEME_PREFERENCE_KEY" in localStorage) {
+			if ('THEME_PREFERENCE_KEY' in localStorage) {
 				// https://github.com/shinokada/svelte-5-ui-lib/blob/fc46272eeeff010bf8ac65c7d54da4b893d9912a/src/lib/darkmode/Darkmode.svelte#L25
-				localStorage.getItem("THEME_PREFERENCE_KEY") === "dark" ? window.document.documentElement.classList.add("dark") : window.document.documentElement.classList.remove("dark");
+				localStorage.getItem('THEME_PREFERENCE_KEY') === 'dark' ? window.document.documentElement.classList.add('dark') : window.document.documentElement.classList.remove('dark');
 			} else {
-				if (window.matchMedia("(prefers-color-scheme: dark)").matches) window.document.documentElement.classList.add("dark");
+				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+					window.document.documentElement.classList.add('dark');
+				}
 			}
 		}
 

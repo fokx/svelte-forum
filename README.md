@@ -70,7 +70,7 @@ https://svelte.dev/docs/kit/snapshots
 
 [x] categories cached in browser, manual refresh in user settings
 
-## Bugs
+## todo
 [x] Load topic with very long posts, achieve infinite scroll
 implemented but has minor pitfalls: 
 
@@ -94,3 +94,8 @@ https://svelte.dev/docs/kit/snapshots
 should scroll down a little bit, and focus on the composer.
 
 [ ] Allow submitting the composer by [Ctrl+Enter]
+
+[ ] use Timeline with topic/post list
+https://svelte-5-ui-lib.codewithshin.com/components/timeline
+
+[ ] Darkmode toggle: add 'follow-system' option

@@ -20,7 +20,6 @@
 
 {:then replies}
 	{#if replies.length > 0}
-		<h2>My Replies</h2>
 		<ul>
 			{#each replies as post}
 				<Topic post={post} />

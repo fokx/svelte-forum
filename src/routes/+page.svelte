@@ -30,15 +30,11 @@
 	const alarm = {
 		remind(aMessage) {
 			if (viewport && viewport.offsetHeight + viewport.scrollTop > viewport.scrollHeight - 50) {
-				console.log('Scrolled to page', page_to_fetch, 'fetching in background');
 				viewport.scrollTop -= 60;
 				// viewport.scrollTo(0, viewport.scrollHeight - 60);
 				update_latest_topics(page_to_fetch);
 				page_to_fetch += 1;
 			}
-			tick().then(() => {
-				console.log('page updated', page_to_fetch);
-			});
 			last_updated_date = new Date();
 			loading_new_page = false;
 			this.timeoutID = undefined;
@@ -49,13 +45,12 @@
 				this.cancel();
 			}
 			if (viewport && viewport.offsetHeight + viewport.scrollTop > viewport.scrollHeight - 50) {
-				console.log('fired');
 				loading_new_page = true;
 				this.timeoutID = setTimeout(
 					(msg) => {
 						this.remind(msg);
 					},
-					2500,
+					500,
 					'alarm msg'
 				);
 			}

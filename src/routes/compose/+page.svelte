@@ -73,7 +73,6 @@
 		if (response.status === 200) {
 			// alert('Post submitted successfully!');
 			response = await response.json();
-			console.log(response);
 			dbb.posts.update(post_id, {
 				cooked: response?.cooked,
 				post_number: response?.post_number,

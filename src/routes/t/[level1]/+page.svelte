@@ -18,9 +18,7 @@
 		dbb.posts.filter(p => p.main_post_id === data.params.level1).toArray()
 			.then(a => a.sort((a, b) => a.post_number < b.post_number ? -1 : 1))
 	);
-	// $effect(()=>{
-	// 	console.log($topic_posts);
-	// });
+
 	async function load_or_fetch_topic_posts() {
 		let before = await dbb.posts.filter(p => p.main_post_id === data.params.level1).toArray();
 		let posts = await update_local_topic_by_external_id(data.params.level1);

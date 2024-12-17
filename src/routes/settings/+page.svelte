@@ -12,7 +12,6 @@
 	let showLoading = $state(false);
 
 	async function update_local_categories2() {
-		// console.log('update_local_categories2');
 	}
 
 

@@ -39,7 +39,6 @@ export function ReadDiscourseUser(cookie_text: string): DiscourseUser {
 			return guestUser;
 		}
 	} catch (error) {
-		console.error(error);
 		return guestUser;
 	}
 }

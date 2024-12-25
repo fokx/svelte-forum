@@ -124,7 +124,6 @@
 {#snippet post_data(post)}
 	<div class="flex-grow justify-center">
 		<Card class="max-w-3xl" >
-			<div><a class="text-blue-800 dark:text-blue-500 text-xl" href={`/p/${post.id}`}># {post.post_number}</a></div>
 			{#if post.title}
 				<div class="flex justify-center">
 					<h5 class="mb-2 text-2xl font-bold tracking-tight">{post.title}</h5>
@@ -141,13 +140,16 @@
 				</h6>
 			</div>
 			{@html post.cooked}
-			<button
-				class="ml-auto block"
-				onclick={() =>enable_reply_modal()}
-				title={`Reply to post #${post.post_number}`}
-				aria-label={`Reply to post #${post.post_number}`}>
-				<Reply />
-			</button>
+			<div class="flex justify-end items-center">
+				<a class="text-blue-800 dark:text-blue-500 text-xl mr-2" href={`/p/${post.id}`}># {post.post_number}</a>
+				<button
+					class="block"
+					onclick={() => enable_reply_modal()}
+					title={`Reply to post #${post.post_number}`}
+					aria-label={`Reply to post #${post.post_number}`}>
+					<Reply />
+				</button>
+			</div>
 		</Card>
 	</div>
 	{#if editing}

@@ -23,7 +23,7 @@
 	let last_updated_date:Date=$state(new Date());
 
 	onMount(() => {
-		page_to_fetch = 2;
+		page_to_fetch = 1;
 		viewport.addEventListener('scroll', () => alarm.setup());
 	});
 

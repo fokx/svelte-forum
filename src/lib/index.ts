@@ -64,9 +64,7 @@ export function assemble_avatar_full_url(avatar_template: string) {
 	if (avatar_template === undefined || avatar_template === null || avatar_template === '') {
 		return PUBLIC_AVATAR_DEFAULT_URL;
 	}
-	if (avatar_template.startsWith('/letter_avatar_proxy')) {
-		return urlJoin(PUBLIC_DISCOURSE_HOST, avatar_template.replace('{size}', '288'));
-	} else if (avatar_template.includes('{size}')) {
+	if (avatar_template.includes('{size}')) {
 		return urlJoin(PUBLIC_DISCOURSE_HOST, avatar_template.replace('{size}', '288'));
 	} else {
 		return urlJoin(PUBLIC_DISCOURSE_HOST, avatar_template);
@@ -213,13 +211,13 @@ async function update_topics(response) {
 				reply_count: topic.reply_count,
 				post_number: 1,
 				topic_id: topic.external_id,
-				reply_to_post_number: null,
+				reply_to_post_number: 0,
 				created_at: topic?.created_at,
 				deleted_at: topic?.deleted_at,
 				updated_at: topic?.updated_at,
 				main_post_id: topic.external_id,
 				is_main_post: true,
-				reply_to_post_id: null,
+				reply_to_post_id: 'nil',
 				// user_id: topic.user_id,
 				// username: topic.username,
 				// avatar_template: topic.avatar_template,
@@ -231,7 +229,8 @@ async function update_topics(response) {
 				last_posted_at: topic?.last_posted_at,
 				last_poster_username: topic?.last_poster_username,
 				original_poster_user_id: original_poster?.user_id,
-				bumped_at: topic?.bumped_at
+				bumped_at: topic?.bumped_at,
+				synced_at: new Date(),
 			};
 			// posts: '&id, topic_id, post_number, reply_to_post_number, last_posted_at', //[topic_id+post_number],[topic_id+reply_to_post_number],
 			posts_to_update.push(p);
@@ -241,8 +240,8 @@ async function update_topics(response) {
 		return posts_to_update;
 	}
 }
-export async function update_latest_topics(page=1) {
-	let response = await get_url(`/latest.json`, { no_definitions: true, page: page });
+export async function update_latest_topics(page=0) {
+	let response = await get_url(`/latest.json`, { no_definitions: true, page: page, order: 'activity'});
 	return await update_topics(response);
 }
 

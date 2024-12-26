@@ -20,7 +20,7 @@
 		Toggle,
 		uiHelpers
 	} from 'svelte-5-ui-lib';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { sineIn } from 'svelte/easing';
 	import '../app.css';
 	import CardList from 'svelte-bootstrap-svg-icons/CardList.svelte';
@@ -45,7 +45,7 @@
 	);
 
 	let { children, data } = $props();
-	let activeUrl = $state($page.url.pathname);
+	let activeUrl = $state(page.url.pathname);
 	let nav = uiHelpers();
 	let dropdownUser = uiHelpers();
 	let dropdownUserStatus = $state(false);
@@ -58,7 +58,7 @@
 
 	$effect(() => {
 		dropdownUserStatus = dropdownUser.isOpen;
-		activeUrl = $page.url.pathname;
+		activeUrl = page.url.pathname;
 		isDemoOpen = demoSidebarUi.isOpen;
 	});
 
@@ -115,7 +115,7 @@
 		return title;
 	}
 
-	let site_name = $derived(pathname2title($page.url.pathname));
+	let site_name = $derived(pathname2title(page.url.pathname));
 </script>
 <header
 	class="sticky top-0 z-50 mx-auto w-full flex-none border-b border-gray-200 bg-gray-50 lg:pl-4 dark:border-gray-600 dark:bg-gray-950">

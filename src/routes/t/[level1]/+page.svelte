@@ -11,9 +11,7 @@
 	import { isThreadedView } from '$lib/stores';
 	onMount(async () => {
 		let threadedViewChecked = localStorage.getItem('THREADED_VIEW') === 'true';
-		isThreadedView.update(value => {
-			return threadedViewChecked;
-		})
+		isThreadedView.set(threadedViewChecked);
 	});
 	let { data }: { data: PageData } = $props();
 
@@ -26,14 +24,14 @@
 		let posts = await update_local_topic_by_external_id(data.params.level1);
 		return posts;
 	}
-
+	import { siteTitle } from '$lib/stores';
 	$effect(() => {
 		if (browser && $topic_posts && $topic_posts.length > 0) {
 			let title = $topic_posts[0].title;
-			dbb.rgv.put({ name: 'title', value: title });
+			// dbb.rgv.put({ name: 'title', value: title });
+			siteTitle.set(title);
 		}
 	});
-
 </script>
 
 {#await load_or_fetch_topic_posts()}

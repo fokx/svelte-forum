@@ -38,7 +38,7 @@
 	import { browser } from '$app/environment';
 	import { liveQuery } from 'dexie';
 	import { invalidateAll } from '$app/navigation';
-	import { isThreadedView } from '$lib/stores'; // Import the store
+	import { isThreadedView, siteTitle } from '$lib/stores'; // Import the store
 
 	let grv_title = liveQuery(() =>
 		dbb.rgv.get('title')
@@ -88,20 +88,26 @@
 	onMount(async () => {
 		await init_dbd_cache();
 		threadedViewChecked = localStorage.getItem('THREADED_VIEW') === 'true';
-		isThreadedView.update(value => {
-			return threadedViewChecked;
-		})
+		isThreadedView.set(threadedViewChecked);
 	});
 	// setContext('isThreadedView', isThreadedView);
+	import { derived } from 'svelte/store';
 
-	function pathname2title(pathname: string) {
+	const pathname2title = derived(siteTitle,
+		($a, set) => {
+			set(process_title($a));
+		},
+		PUBLIC_SITE_TITLE
+	);
+
+	function process_title(post_title: string) {
 		let title: string;
-		if (pathname === '/') {
+		if (page.url.pathname === '/') {
 			title = PUBLIC_SITE_TITLE;
 		} else {
-			title = pathname.replaceAll('/', ' ');
-			if (browser && $grv_title?.value && (pathname.startsWith('/t/') || pathname.startsWith('/p/'))) {
-				title = $grv_title?.value;
+			title = page.url.pathname.replaceAll('/', ' ');
+			if (browser && post_title && (page.url.pathname.startsWith('/t/') || page.url.pathname.startsWith('/p/'))) {
+				title = post_title;
 			}
 			if (title.length > parseInt(PUBLIC_TITLE_SLICE_LENGTH)) {
 				title = title.slice(0, parseInt(PUBLIC_TITLE_SLICE_LENGTH)) + '...';
@@ -115,7 +121,6 @@
 		return title;
 	}
 
-	let site_name = $derived(pathname2title(page.url.pathname));
 </script>
 <header
 	class="sticky top-0 z-50 mx-auto w-full flex-none border-b border-gray-200 bg-gray-50 lg:pl-4 dark:border-gray-600 dark:bg-gray-950">
@@ -133,7 +138,7 @@
 								d="M1 1h15M1 7h15M1 13h15" />
 				</svg>
 			</button>
-			<NavBrand siteName={site_name} spanClass="text-xs sm:text-xs md:text-xl lg:text-xl">
+			<NavBrand siteName={$pathname2title} spanClass="text-xs sm:text-xs md:text-xl lg:text-xl">
 				<img width="20" src="/images/svelte-icon.png" alt="site icon" />
 			</NavBrand>
 		{/snippet}

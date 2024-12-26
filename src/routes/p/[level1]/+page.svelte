@@ -9,12 +9,9 @@
 	import { dbb } from '$lib/dbb';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
+	import { siteTitle } from '$lib/stores';
 
 	let { data }: { data: PageData } = $props();
-	let isThreadedView = $state(true);
-	onMount(async () => {
-		isThreadedView = localStorage.getItem('THREADED_VIEW') === 'true';
-	});
 	async function load_or_fetch_this_post() {
 		let _this_post = await dbb.posts.get(data.params.level1);
 		if (_this_post === undefined || _this_post === null) {
@@ -23,9 +20,11 @@
 			// update all posts under this topic (in the background)
 			update_local_topic_by_external_id(_this_post.main_post_id);
 		}
+
 		if (browser && _this_post) {
 			let title = convertHtmlToText(_this_post.cooked);
-			dbb.rgv.put({ name: 'title', value: title });
+			siteTitle.set(title);
+			// dbb.rgv.put({ name: 'title', value: title });
 		}
 		return _this_post;
 	}

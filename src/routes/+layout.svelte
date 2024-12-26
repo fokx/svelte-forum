@@ -17,6 +17,7 @@
 		SidebarDropdownWrapper,
 		SidebarGroup,
 		SidebarItem,
+		Span,
 		Toggle,
 		uiHelpers
 	} from 'svelte-5-ui-lib';
@@ -37,8 +38,7 @@
 	import { PUBLIC_DISCOURSE_HOST, PUBLIC_SITE_TITLE, PUBLIC_TITLE_SLICE_LENGTH } from '$env/static/public';
 	import { browser } from '$app/environment';
 	import { liveQuery } from 'dexie';
-	import { invalidateAll } from '$app/navigation';
-	import {  siteTitle } from '$lib/stores'; // Import the store
+	import { siteTitle } from '$lib/stores'; // Import the store
 	import { derived } from 'svelte/store';
 
 	let grv_title = liveQuery(() =>
@@ -68,7 +68,6 @@
 		let child = target.querySelector('.darkmode-button-in-avatar-dropdown');
 		child?.click();
 	}
-
 
 
 	async function init_dbd_cache() {
@@ -102,6 +101,7 @@
 		}
 		// invalidateAll();
 	}
+
 	let grv_preference_flat_view = liveQuery(() =>
 		dbb.rgv.get('preference_flat_view')
 	);
@@ -247,7 +247,11 @@
 				</SidebarItem>
 			</SidebarDropdownWrapper>
 		</SidebarGroup>
-
+		<SidebarGroup border>
+		<a href="https://github.com/fokx/svelte-forum">
+			<Span decorationColor="orange">Powered by <Span gradient="amberToEmerald">svelte-forum</Span></Span>
+		</a>
+		</SidebarGroup>
 	</Sidebar>
 
 	<main

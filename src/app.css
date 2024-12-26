@@ -1928,3 +1928,84 @@ button.toolbar-item.sl_font-increment {
 a.inline-onebox {
     color: theme('colors.primary.500');
 }
+
+
+/*.lightbox-wrapper {*/
+/*    display: inline-block;*/
+/*    vertical-align: middle;*/
+/*    img {*/
+/*        object-fit: cover;*/
+/*        object-position: top;*/
+/*    }*/
+/*    &,*/
+/*    * {*/
+/*        outline: 0;*/
+/*    }*/
+/*}*/
+
+.lightbox-wrapper {
+    display: block;
+    text-align: center;
+    outline: 0;
+}
+
+/*.lightbox a, .onebox a {*/
+/*    word-wrap: break-word;*/
+/*}*/
+
+
+
+.lightbox-wrapper .lightbox {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.lightbox img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+
+aside.onebox {
+    border: 5px solid theme('colors.primary.300');
+    margin: 1em 0;
+    padding: 1em;
+    font-size: theme('colors.primary.700');
+    background: theme('colors.primary.100');
+}
+
+aside.onebox .onebox-body img:not(.avatar, .onebox-avatar-inline) {
+    max-height: 170px;
+    max-width: 20%;
+    height: auto;
+    float: left;
+    margin-right: 1em;
+}
+aside.onebox .onebox-body a[href] {
+    color: theme('colors.primary.700');
+    text-decoration: none;
+}
+aside.onebox .onebox-body h3, aside.onebox .onebox-body h4 {
+    font-size: 1.2em;
+    margin: 0 0 10px 0;
+    line-height: 1.2em;
+}
+aside.onebox .onebox-body p:last-child {
+    margin-bottom: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+    aside.onebox {
+        border: 5px solid theme('colors.primary.800');
+        font-size: theme('colors.primary.500');
+        background: theme('colors.primary.900');
+    }
+
+    aside.onebox .onebox-body a[href] {
+        color: theme('colors.primary.200');
+    }
+}

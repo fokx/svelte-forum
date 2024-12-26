@@ -8,11 +8,12 @@
 	import { liveQuery } from 'dexie';
 	import { dbb } from '$lib/dbb';
 	import { browser } from '$app/environment';
-	import { isThreadedView } from '$lib/stores';
-	onMount(async () => {
-		let threadedViewChecked = localStorage.getItem('THREADED_VIEW') === 'true';
-		isThreadedView.set(threadedViewChecked);
-	});
+	// onMount(async () => {
+	// 	let flatViewChecked = localStorage.getItem('FLAT_VIEW') === 'true';
+	// 	if (browser) {
+	// 		dbb.rgv.put({ name: 'preference_flat_view', value: flatViewChecked.toString() });
+	// 	}
+	// });
 	let { data }: { data: PageData } = $props();
 
 	let topic_posts = liveQuery(() =>
@@ -28,10 +29,12 @@
 	$effect(() => {
 		if (browser && $topic_posts && $topic_posts.length > 0) {
 			let title = $topic_posts[0].title;
-			// dbb.rgv.put({ name: 'title', value: title });
 			siteTitle.set(title);
 		}
 	});
+	let grv_preference_flat_view = liveQuery(() =>
+		dbb.rgv.get('preference_flat_view')
+	);
 </script>
 
 {#await load_or_fetch_topic_posts()}
@@ -46,7 +49,7 @@
 {/await}
 
 {#if $topic_posts && $topic_posts.length > 0}
-	{#if $isThreadedView}
+	{#if $grv_preference_flat_view?.value !== 'true'}
 		<Post post={$topic_posts[0]} expand={true} />
 	{:else}
 		{#each $topic_posts as post}

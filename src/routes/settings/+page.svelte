@@ -101,6 +101,7 @@
 
 	function handleDeleteLocalAll() {
 		showLoading = true;
+		localStorage.clear();
 		dbb.delete().then(() => {
 			showSuccessToast = true;
 			setTimeout(() => {

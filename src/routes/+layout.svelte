@@ -38,7 +38,8 @@
 	import { browser } from '$app/environment';
 	import { liveQuery } from 'dexie';
 	import { invalidateAll } from '$app/navigation';
-	import { isThreadedView, siteTitle } from '$lib/stores'; // Import the store
+	import {  siteTitle } from '$lib/stores'; // Import the store
+	import { derived } from 'svelte/store';
 
 	let grv_title = liveQuery(() =>
 		dbb.rgv.get('title')
@@ -53,7 +54,7 @@
 	const spanClass = 'flex-1 ms-3 whitespace-nowrap';
 	const demoSidebarUi = uiHelpers();
 	let isDemoOpen = $state(false);
-	let threadedViewChecked = $state();
+	let flatViewChecked: boolean = $state(false);
 	const closeDemoSidebar = demoSidebarUi.close;
 
 	$effect(() => {
@@ -68,14 +69,7 @@
 		child?.click();
 	}
 
-	function toggleThreadedView(event) {
-		isThreadedView.update(value => {
-			const new_value = !threadedViewChecked;
-			localStorage.setItem('THREADED_VIEW', new_value);
-			return new_value;
-		});
-		invalidateAll();
-	}
+
 
 	async function init_dbd_cache() {
 		let dbdc = await dbb.cache.toCollection().last();
@@ -87,12 +81,35 @@
 
 	onMount(async () => {
 		await init_dbd_cache();
-		threadedViewChecked = localStorage.getItem('THREADED_VIEW') === 'true';
-		isThreadedView.set(threadedViewChecked);
+		const flatViewCheckedLS = localStorage.getItem('FLAT_VIEW');
+		if (flatViewCheckedLS === null) {
+			flatViewChecked = false;
+			localStorage.setItem('FLAT_VIEW', flatViewChecked.toString());
+		} else {
+			flatViewChecked = flatViewCheckedLS === 'true';
+		}
+		if (browser) {
+			dbb.rgv.put({ name: 'preference_flat_view', value: flatViewChecked.toString() });
+		}
 	});
-	// setContext('isThreadedView', isThreadedView);
-	import { derived } from 'svelte/store';
 
+	function toggleflatView(event) {
+		// flatViewChecked hasn't changed yet
+		const new_value = !flatViewChecked;
+		localStorage.setItem('FLAT_VIEW', new_value.toString());
+		if (browser) {
+			dbb.rgv.put({ name: 'preference_flat_view', value: new_value.toString() });
+		}
+		// invalidateAll();
+	}
+	let grv_preference_flat_view = liveQuery(() =>
+		dbb.rgv.get('preference_flat_view')
+	);
+	grv_preference_flat_view.subscribe((value) => {
+		if (value) {
+			flatViewChecked = value.value === 'true';
+		}
+	});
 	const pathname2title = derived(siteTitle,
 		($a, set) => {
 			set(process_title($a));
@@ -178,9 +195,9 @@
 								</button>
 							</DropdownLi>
 							<DropdownLi>
-								<Toggle onclick={event => toggleThreadedView(event)}
-												bind:checked={threadedViewChecked} size="small">
-									Threaded View
+								<Toggle onclick={event => toggleflatView(event)}
+												bind:checked={flatViewChecked} size="small">
+									Flat View
 								</Toggle>
 							</DropdownLi>
 						</DropdownUl>

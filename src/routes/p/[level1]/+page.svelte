@@ -24,7 +24,6 @@
 		if (browser && _this_post) {
 			let title = convertHtmlToText(_this_post.cooked);
 			siteTitle.set(title);
-			// dbb.rgv.put({ name: 'title', value: title });
 		}
 		return _this_post;
 	}

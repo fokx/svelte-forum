@@ -15,10 +15,12 @@ ssh $host chown -R discourse:discourse /srv/svelte-forum
 pnpm dev --port 4002
 cd /srv/svelte-forum; pnpm i && pnpm run build && pnpm db:push && lsof -i :4002|tail -1|awk '{print $2}'|xargs kill; sleep 1; HOST=127.0.0.1 PORT=4002 node build
 
+host=mnz
 rsync -av --delete /f/svelte-5-ui-lib $host:/srv/ --exclude={"*.db",".env","node_modules/*","build/*",".svelte-kit/*"}
 ssh $host chown -R discourse:discourse /srv/svelte-5-ui-lib
 cd /srv/svelte-5-ui-lib; pnpm i && pnpm build && pnpm package
 
+host=mnz
 rsync -av --delete /f/svelte-lexical $host:/srv/ --exclude={"*.db",".env","node_modules/*","build/*",".svelte-kit/*"}
 ssh $host chown -R discourse:discourse /srv/svelte-lexical
 cd /srv/svelte-lexical; pnpm i; cd packages/svelte-lexical; pnpm build

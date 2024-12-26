@@ -17,6 +17,7 @@
 		SidebarDropdownWrapper,
 		SidebarGroup,
 		SidebarItem,
+		Toggle,
 		uiHelpers
 	} from 'svelte-5-ui-lib';
 	import { page } from '$app/stores';
@@ -36,6 +37,8 @@
 	import { PUBLIC_DISCOURSE_HOST, PUBLIC_SITE_TITLE, PUBLIC_TITLE_SLICE_LENGTH } from '$env/static/public';
 	import { browser } from '$app/environment';
 	import { liveQuery } from 'dexie';
+	import { invalidateAll } from '$app/navigation';
+	import { isThreadedView } from '$lib/stores'; // Import the store
 
 	let grv_title = liveQuery(() =>
 		dbb.rgv.get('title')
@@ -50,6 +53,7 @@
 	const spanClass = 'flex-1 ms-3 whitespace-nowrap';
 	const demoSidebarUi = uiHelpers();
 	let isDemoOpen = $state(false);
+	let threadedViewChecked = $state();
 	const closeDemoSidebar = demoSidebarUi.close;
 
 	$effect(() => {
@@ -64,6 +68,15 @@
 		child?.click();
 	}
 
+	function toggleThreadedView(event) {
+		isThreadedView.update(value => {
+			const new_value = !threadedViewChecked;
+			localStorage.setItem('THREADED_VIEW', new_value);
+			return new_value;
+		});
+		invalidateAll();
+	}
+
 	async function init_dbd_cache() {
 		let dbdc = await dbb.cache.toCollection().last();
 		if (!dbdc || dbdc.api_key !== data.api_key) {
@@ -74,7 +87,12 @@
 
 	onMount(async () => {
 		await init_dbd_cache();
+		threadedViewChecked = localStorage.getItem('THREADED_VIEW') === 'true';
+		isThreadedView.update(value => {
+			return threadedViewChecked;
+		})
 	});
+	// setContext('isThreadedView', isThreadedView);
 
 	function pathname2title(pathname: string) {
 		let title: string;
@@ -101,7 +119,9 @@
 </script>
 <header
 	class="sticky top-0 z-50 mx-auto w-full flex-none border-b border-gray-200 bg-gray-50 lg:pl-4 dark:border-gray-600 dark:bg-gray-950">
-	<Navbar divClass="h-[5vh]" navClass="w-full divide-gray-200 border-gray-200 bg-gray-50 dark_bg_theme text-gray-500 dark:divide-gray-700 dark:border-gray-700 dark:transparent dark:text-gray-400 sm:px-4" hamburgerMenu={false} fluid div2Class="ml-auto w-full">
+	<Navbar divClass="h-[5vh]"
+					navClass="w-full divide-gray-200 border-gray-200 bg-gray-50 dark_bg_theme text-gray-500 dark:divide-gray-700 dark:border-gray-700 dark:transparent dark:text-gray-400 sm:px-4"
+					hamburgerMenu={false} fluid div2Class="ml-auto w-full">
 		{#snippet brand()}
 			<button onclick={demoSidebarUi.toggle} type="button" class="z-50 mr-4 mt-1 md:hidden"
 							aria-controls="sidebar"
@@ -114,7 +134,7 @@
 				</svg>
 			</button>
 			<NavBrand siteName={site_name} spanClass="text-xs sm:text-xs md:text-xl lg:text-xl">
-				<img width="30" src="/images/svelte-icon.png" alt="site icon" />
+				<img width="20" src="/images/svelte-icon.png" alt="site icon" />
 			</NavBrand>
 		{/snippet}
 		{#snippet navSlotBlock()}
@@ -147,10 +167,16 @@
 						<DropdownUl>
 							<DropdownLi href="/settings">Settings</DropdownLi>
 							<DropdownLi>
-								<button class="lg:hidden w-full text-left" onclick={event => toggleDarkMode(event)}>
-									<Darkmode
-										class="darkmode-button-in-avatar-dropdown" />
+								<button class="lg:hidden w-full text-left flex items-center" onclick={event => toggleDarkMode(event)}>
+									<Darkmode class="darkmode-button-in-avatar-dropdown" />
+									<span class="ml-2">Toggle Dark</span>
 								</button>
+							</DropdownLi>
+							<DropdownLi>
+								<Toggle onclick={event => toggleThreadedView(event)}
+												bind:checked={threadedViewChecked} size="small">
+									Threaded View
+								</Toggle>
 							</DropdownLi>
 						</DropdownUl>
 						<DropdownFooter class="px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600">Sign out

@@ -11,10 +11,9 @@ import { admin_post_url } from './index';
 // import { users,discourse_api_keys} from "$lib/server/db/schema";
 
 export function ReadDiscourseUser(cookie_text: string): DiscourseUser {
-	const guestUser = {id :6641,username:"guest",name:null,admin:true,moderator:false,trust_level:1,avatar_template:"/letter_avatar_proxy/v4/letter/g/8dc957/{size}.png",title:null,groups:["staff","INTL","trust_level_0","admins","trust_level_1"],locale:null,silenced_till:null,staged:false,active:true,created_at:"2024-12-10T01:10:26.154Z",updated_at:"2024-12-10T01:12:06.822Z",hmac:"1e4ccccc13141a98c58cc90f4b8249e5c87c1dbe98e0635b1617c036669d0c45"};
+	const guestUser = {id :6818,username:"guest",name:null,admin:false,moderator:false,trust_level:3,avatar_template:"/letter_avatar_proxy/v4/letter/g/8dc957/{size}.png",title:null,groups:["INTL","trust_level_0","trust_level_1","trust_level_2","trust_level_3"],locale:null,silenced_till:null,staged:false,active:true,created_at:"2024-12-10T01:10:26.154Z",updated_at:"2024-12-10T01:12:06.822Z",hmac:"1e4ccccc13141a98c58cc90f4b8249e5c87c1dbe98e0635b1617c036669d0c45"};
 
 	try {
-
 		if (cookie_text === undefined || cookie_text === null || cookie_text === '') {
 			cookie_text = DISCOURSE_GUEST_ACCOUNT_USERINFO_COOKIE;
 		}

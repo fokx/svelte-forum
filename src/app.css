@@ -1925,3 +1925,6 @@ button.toolbar-item.sl_font-increment {
     justify-content: flex-end;
 }
 
+a.inline-onebox {
+    color: theme('colors.primary.500');
+}

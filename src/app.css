@@ -1941,10 +1941,15 @@ button.toolbar-item.sl_font-increment {
     justify-content: flex-end;
 }
 
-a.inline-onebox {
+a {
     color: theme('colors.primary.500');
 }
 
+.topic-list {
+    a {
+        color: black;
+    }
+}
 
 .lightbox-wrapper {
     display: block;
@@ -2046,6 +2051,12 @@ aside.onebox .onebox-body p:last-child {
         color: theme('colors.primary.200');
     }
 
+    .topic-list {
+        a {
+            color: white;
+        }
+    }
+
     /*pre.lines-decorator {*/
     /*    --lines-bgcolor: theme('colors.secondary.950');*/
     /*}*/
@@ -2070,4 +2081,34 @@ aside.onebox .onebox-body p:last-child {
 ul {
     list-style: initial;
     padding-left: 1.5em;
+}
+
+
+div.poll-outer div.poll {
+    grid-template-columns: 1fr 10em;
+    grid-template-areas: "poll info" "buttons buttons";
+}
+
+div.poll-outer div.poll {
+    margin: 1em 0;
+    border: 1px solid theme('colors.primary.50');
+    display: grid;
+    grid-template-areas: "poll" "info" "buttons";
+}
+
+div.poll-outer div.poll .poll-container {
+    box-sizing: border-box;
+    grid-area: poll;
+    padding: 1em;
+    width: 100%;
+    overflow: visible;
+    align-self: center;
+}
+
+div.poll-outer div.poll ul, div.poll-outer div.poll ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: inline-block;
+    width: 100%;
 }

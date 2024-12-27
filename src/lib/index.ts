@@ -8,6 +8,15 @@ import { dbb } from '$lib/dbb';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { page } from '$app/state';
+import * as htmlparser2 from "htmlparser2";
+import { render as dom_render } from "dom-serializer";
+import * as domutils from "domutils";
+import hljs from 'highlight.js';
+import Highlight from "svelte-highlight";
+import EmojiConvertor from 'emoji-js';
+const emoji = new EmojiConvertor();
+emoji.replace_mode = 'unified';
+emoji.img_set = 'google'; // this line seems to have no effect, see https://github.com/iamcal/emoji-data
 
 function generateRandomString(length: number) {
 	let result = '';
@@ -159,7 +168,7 @@ async function update_local_topic(response) {
 				is_main_post: is_main_post,
 				main_post_id: main_post_id,
 				reply_to_post_id: reply_to_post_id,
-				title: post.post_number === 1 ? response.title : null,
+				title: post.post_number === 1 ? emoji.replace_colons(response.title) : null,
 				user_id: post.user_id,
 				// TODO: check how to remove this redundant info
 				username: post.username,
@@ -208,7 +217,7 @@ async function update_topics(response) {
 			// TODO: add global id in Discourse
 			const p = {
 				id: topic.external_id,
-				title: topic.title,
+				title: emoji.replace_colons(topic.title),
 				reply_count: topic.reply_count,
 				post_number: 1,
 				topic_id: topic.external_id,
@@ -225,7 +234,7 @@ async function update_topics(response) {
 				/// topic specic field
 				fancy_title: topic?.fancy_title,
 				posts_count: topic?.posts_count,
-				excerpt: topic?.excerpt,
+				excerpt: emoji.replace_colons(topic?.excerpt),
 				image_url: topic?.image_url,
 				last_posted_at: topic?.last_posted_at,
 				last_poster_username: topic?.last_poster_username,
@@ -260,8 +269,8 @@ export async function update_user_replies(username: string) {
 		for (const reply of response.user_actions) {
 			const p = {
 				id: reply.external_id,
-				excerpt: reply?.excerpt,
-				title: reply.title,
+				excerpt: emoji.replace_colons(reply?.excerpt),
+				title: emoji.replace_colons(reply.title),
 				reply_count: reply.reply_count,
 				post_number: reply.post_number,
 				reply_id: reply.reply_id,
@@ -335,6 +344,9 @@ export async function get_avatar_url_by_username(username) {
 
 
 export async function fetch_post_by_external_id(post_external_id) {
+	// get `/posts/{id}.json` with  { include_raw: true } will return raw with post
+	// while query with external_id does not.
+	// should fix this in custom Discourse code
 	let response = await get_url(`/posts/by_external_id/${post_external_id}.json`);
 	if (response.status === 200) {
 		const post = await response.json();
@@ -365,9 +377,28 @@ const html_unchecked_square = `<svg xmlns="http://www.w3.org/2000/svg" width="16
 </svg>`;
 
 export function process_cooked(cooked: string) {
+	if (cooked === undefined || cooked === null || cooked === '' ) {
+		return '';
+	}
 	cooked = cooked.replaceAll(`<span class="chcklst-box checked fa fa-square-check-o fa-fw">`,html_checked_square+`<span class="chcklst-box checked">`);
 	cooked = cooked.replaceAll(`<span class="chcklst-box fa fa-square-o fa-fw">`,html_unchecked_square+`<span class="chcklst-box unchecked">`);
+	// console.log(cooked);
+	// const dom = htmlparser2.parseDocument(cooked);
+	return cooked
 
-	return cooked;
+	// const preElements = domutils.findAll((elem) => elem.tagName === 'pre', dom.children);
+	// preElements.forEach((preElem) => {
+	// 	const codeElements = domutils.findAll((elem) => elem.tagName === 'code', [preElem]);
+	// 	if (codeElements.length > 0) {
+	// 		// let removed = dom_render(preElem, { encodeEntities : 'utf8' });
+	// 		// let new_el= hljs.highlightElement(preElem).value;
+	// 		// domutils.replaceElement(preElem, new_el);
+	// 	}
+	// });
+
+	// let html = dom_render(dom, { encodeEntities : 'utf8' });
+
+	// console.log(html);
+	// return html;
 }
 

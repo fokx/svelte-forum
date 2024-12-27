@@ -137,8 +137,19 @@
 		}
 		return title;
 	}
+	// import Highlight from "svelte-highlight";
+	// import typescript from "svelte-highlight/languages/typescript";
+	// import ruby from "svelte-highlight/languages/ruby";
+	// import github from "svelte-highlight/styles/github";
+	import "svelte-highlight/styles/github.css";
 
+	// const code = "const add = (a: number, b: number) => a + b;";
 </script>
+
+<!--<svelte:head>-->
+<!--	{@html github}-->
+<!--</svelte:head>-->
+<!--<Highlight language={typescript} {code} />-->
 <header
 	class="sticky top-0 z-50 mx-auto w-full flex-none border-b border-gray-200 bg-gray-50 lg:pl-4 dark:border-gray-600 dark:bg-gray-950">
 	<Navbar divClass="h-[5vh]"

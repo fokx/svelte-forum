@@ -89,7 +89,9 @@
 
 		<ul>
 			{#each $latest_topics as topic}
-				<Topic post={topic} />
+				<div class="topic-list">
+					<Topic post={topic} />
+				</div>
 			{/each}
 		</ul>
 	{:else}

@@ -9,7 +9,7 @@
 	import { browser } from '$app/environment';
 	import Self from './Post.svelte';
 	import { fly, slide } from 'svelte/transition';
-
+	import hljs from 'highlight.js';
 	let {
 		post,
 		indent = 0,
@@ -119,6 +119,13 @@
 	// 	// TODO get user info
 	// 	return undefined;
 	// }
+	if (browser) {
+		hljs.highlightAll();
+			// document.querySelectorAll('pre code').forEach((el) => {
+			// 	hljs.highlightElement(el);
+			// });
+	}
+
 </script>
 
 {#snippet post_data(post)}

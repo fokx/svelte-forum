@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { assemble_avatar_full_url, display_time, GeneratePostId, post_url } from '$lib';
+	import { assemble_avatar_full_url, display_time, GeneratePostId, post_url, process_cooked } from '$lib';
 	import { Avatar, Card } from 'svelte-5-ui-lib';
 	import RichTextComposer from '$lib/components/MyRichTextComposer.svelte';
 	import { convertToMarkdownString, PLAYGROUND_TRANSFORMERS } from '../../../../svelte-lexical/packages/svelte-lexical';
@@ -139,7 +139,7 @@
 					{/if}
 				</h6>
 			</div>
-			{@html post.cooked}
+			{@html process_cooked(post.cooked)}
 			<div class="flex justify-end items-center">
 				<a class="text-blue-800 dark:text-blue-500 text-xl mr-2" href={`/p/${post.id}`}># {post.post_number}</a>
 				<button

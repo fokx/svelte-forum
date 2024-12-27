@@ -249,7 +249,7 @@
 		</SidebarGroup>
 		<SidebarGroup border>
 		<a href="https://github.com/fokx/svelte-forum">
-			<Span decorationColor="orange">Powered by <Span gradient="amberToEmerald">svelte-forum</Span></Span>
+			<Span class='text-gray-900 dark:text-gray-100' decorationColor="orange">Powered by <Span gradient="amberToEmerald">svelte-forum</Span></Span>
 		</a>
 		</SidebarGroup>
 	</Sidebar>

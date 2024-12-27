@@ -3,7 +3,8 @@
 		assemble_avatar_full_url,
 		display_time,
 		get_avatar_url_by_username,
-		get_cached_avatar_url_by_user_id
+		get_cached_avatar_url_by_user_id,
+		process_cooked
 	} from '$lib';
 	import { Avatar, Card } from 'svelte-5-ui-lib';
 	import { onMount } from 'svelte';
@@ -52,7 +53,7 @@
 				{/await}
 
 			</div>
-			{@html post.excerpt}
+			{@html process_cooked(post.excerpt)}
 		</Card>
 	</div>
 {/snippet}

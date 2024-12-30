@@ -13,7 +13,7 @@ host=mnz
 rsync -av --delete /f/svelte-forum $host:/srv/ --exclude={"*.db",".env","node_modules/*","build/*",".svelte-kit/*"}
 ssh $host chown -R discourse:discourse /srv/svelte-forum
 pnpm dev --port 4002
-cd /srv/svelte-forum; pnpm i && pnpm run build && pnpm db:push && lsof -i :4002|tail -1|awk '{print $2}'|xargs kill; sleep 1; HOST=127.0.0.1 PORT=4002 node build
+cd /srv/svelte-forum; sed -i '/"svelte-5-ui-lib": "link/c\  "svelte-5-ui-lib": "0.12.2",' package.json; pnpm i && pnpm run build && pnpm db:push && lsof -i :4002|tail -1|awk '{print $2}'|xargs kill; sleep 1; HOST=127.0.0.1 PORT=4002 node build
 
 host=mnz
 rsync -av --delete /f/svelte-5-ui-lib $host:/srv/ --exclude={"*.db",".env","node_modules/*","build/*",".svelte-kit/*"}

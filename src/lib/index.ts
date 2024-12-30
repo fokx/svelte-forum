@@ -131,6 +131,10 @@ export async function update_local_topic_by_external_id(topic_external_id) {
 	let response = await get_url(`/t_external_id/${topic_external_id}.json`, {print: true});
 	return await update_local_topic(response);
 }
+export async function update_local_topic_by_topic_id(topic_id) {
+	let response = await get_url(`/t/${topic_id}.json`, {print: true});
+	return await update_local_topic(response);
+}
 async function update_local_topic(response) {
 	if (response.status === 200) {
 		response = await response.json();

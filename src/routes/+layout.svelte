@@ -28,6 +28,8 @@
 	import ChatLeftDots from 'svelte-bootstrap-svg-icons/ChatLeftDots.svelte';
 	import HouseDoor from 'svelte-bootstrap-svg-icons/HouseDoor.svelte';
 	import HouseDoorFill from 'svelte-bootstrap-svg-icons/HouseDoorFill.svelte';
+	import ChevronLeft from 'svelte-bootstrap-svg-icons/ChevronLeft.svelte';
+	import Github from 'svelte-bootstrap-svg-icons/Github.svelte';
 	import PencilSquare from 'svelte-bootstrap-svg-icons/PencilSquare.svelte';
 	import PersonFill from 'svelte-bootstrap-svg-icons/PersonFill.svelte';
 	import Plus from 'svelte-bootstrap-svg-icons/Plus.svelte';
@@ -59,6 +61,7 @@
 	let dropdownUserStatus = $state(false);
 	let closeDropdownUser = dropdownUser.close;
 	const spanClass = 'flex-1 ms-3 whitespace-nowrap';
+	const BottomNavItemClass = 'mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500';
 	const demoSidebarUi = uiHelpers();
 	let isDemoOpen = $state(false);
 	let flatViewChecked: boolean = $state(false);
@@ -149,7 +152,7 @@
 		}
 		return title;
 	}
-
+	const githubURL = "https://github.com/fokx/svelte-forum";
 	// const code = "const add = (a: number, b: number) => a + b;";
 </script>
 
@@ -234,7 +237,9 @@
 		{/snippet}
 		<!--only show NavUl on desktop, no NavHamburger on mobile-->
 		<NavUl class="order-1 me-1 ms-1" {activeUrl}>
-			<NavLi href={westUrl}>West</NavLi>
+			<NavLi href={westUrl}>
+				<ChevronLeft />
+			</NavLi>
 		</NavUl>
 	</Navbar>
 </header>
@@ -250,7 +255,7 @@
 					<HouseDoor />
 				{/snippet}
 			</SidebarItem>
-			<SidebarItem label="Compose" href="/compose">
+			<SidebarItem label="Compose" href="/compose">c
 				{#snippet iconSlot()}
 					<PencilSquare />
 				{/snippet}
@@ -272,7 +277,7 @@
 			</SidebarDropdownWrapper>
 		</SidebarGroup>
 		<SidebarGroup border>
-			<a href="https://github.com/fokx/svelte-forum">
+			<a href={githubURL}>
 				<Span class='text-gray-900 dark:text-gray-100' decorationColor="orange">Powered by <Span
 					gradient="amberToEmerald">svelte-forum</Span></Span>
 			</a>
@@ -296,23 +301,21 @@
 	<!--        <BottomNavHeaderItem itemName="Following"/>-->
 	<!--    </BottomNavHeader>-->
 	<!--{/snippet}-->
-	<BottomNavItem btnName="Experimental">
-		<span class="text-gray-900 dark:text-white">Under construction</span>
+	<BottomNavItem btnName="Under Construction" href={githubURL}>
+		<!--		<span class="text-gray-900 dark:text-white">🚧</span>-->
+		<Github class={BottomNavItemClass} />
 	</BottomNavItem>
 	<BottomNavItem btnName="West" href={westUrl}>
-		<span class="text-gray-900 dark:text-white">West</span>
+		<ChevronLeft class={BottomNavItemClass} />
 	</BottomNavItem>
 	<BottomNavItem btnName="New post" href="/compose">
-		<Plus
-			class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500" />
+		<Plus class={BottomNavItemClass} />
 	</BottomNavItem>
 	<BottomNavItem btnName="East" href="/">
-		<HouseDoorFill
-			class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500" />
+		<HouseDoorFill class={BottomNavItemClass} />
 	</BottomNavItem>
 	<BottomNavItem btnName="Settings" href="/settings">
-		<Sliders2Vertical
-			class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-500" />
+		<Sliders2Vertical class={BottomNavItemClass} />
 	</BottomNavItem>
 
 </BottomNav>

@@ -40,6 +40,12 @@
 	import { liveQuery } from 'dexie';
 	import { siteTitle } from '$lib/stores'; // Import the store
 	import { derived } from 'svelte/store';
+	import urlJoin from 'url-join';
+	// import Highlight from "svelte-highlight";
+	// import typescript from "svelte-highlight/languages/typescript";
+	// import ruby from "svelte-highlight/languages/ruby";
+	// import github from "svelte-highlight/styles/github";
+	import 'svelte-highlight/styles/github.css';
 
 	let grv_title = liveQuery(() =>
 		dbb.rgv.get('title')
@@ -47,6 +53,7 @@
 
 	let { children, data } = $props();
 	let activeUrl = $state(page.url.pathname);
+	let westUrl = $state(PUBLIC_DISCOURSE_HOST);
 	let nav = uiHelpers();
 	let dropdownUser = uiHelpers();
 	let dropdownUserStatus = $state(false);
@@ -61,6 +68,11 @@
 		dropdownUserStatus = dropdownUser.isOpen;
 		activeUrl = page.url.pathname;
 		isDemoOpen = demoSidebarUi.isOpen;
+		if (page.url.pathname.startsWith('/t/')) {
+			westUrl = new URL(urlJoin(PUBLIC_DISCOURSE_HOST, 't_external_id_redir', page.url.pathname.split('/').at(-1)) + '.json').toString();
+		} else {
+			westUrl = PUBLIC_DISCOURSE_HOST;
+		}
 	});
 
 	function toggleDarkMode(event) {
@@ -68,7 +80,6 @@
 		let child = target.querySelector('.darkmode-button-in-avatar-dropdown');
 		child?.click();
 	}
-
 
 	async function init_dbd_cache() {
 		let dbdc = await dbb.cache.toCollection().last();
@@ -110,12 +121,13 @@
 			flatViewChecked = value.value === 'true';
 		}
 	});
-	const pathname2title = derived(siteTitle,
+	const currentSiteTitle = derived(siteTitle,
 		($a, set) => {
 			set(process_title($a));
 		},
 		PUBLIC_SITE_TITLE
 	);
+
 
 	function process_title(post_title: string) {
 		let title: string;
@@ -137,11 +149,6 @@
 		}
 		return title;
 	}
-	// import Highlight from "svelte-highlight";
-	// import typescript from "svelte-highlight/languages/typescript";
-	// import ruby from "svelte-highlight/languages/ruby";
-	// import github from "svelte-highlight/styles/github";
-	import "svelte-highlight/styles/github.css";
 
 	// const code = "const add = (a: number, b: number) => a + b;";
 </script>
@@ -166,7 +173,7 @@
 								d="M1 1h15M1 7h15M1 13h15" />
 				</svg>
 			</button>
-			<NavBrand siteName={$pathname2title} spanClass="text-xs sm:text-xs md:text-xl lg:text-xl">
+			<NavBrand siteName={$currentSiteTitle} spanClass="text-xs sm:text-xs md:text-xl lg:text-xl">
 				<img width="20" src="/images/svelte-icon.png" alt="site icon" />
 			</NavBrand>
 		{/snippet}
@@ -182,8 +189,12 @@
 			<!--                    <Input id="search-navbar" class="bg-transparent ps-10" placeholder="Search..."/>-->
 			<!--                </div>-->
 			<!--            </div>-->
-			<div class="flex items-center space-x-1 order-3">
-				<Darkmode class="hidden lg:block" />
+			<div class="hidden lg:flex items-center space-x-1 order-3">
+				<Darkmode />
+				<Toggle onclick={event => toggleflatView(event)}
+								bind:checked={flatViewChecked} size="small">
+					Flat View
+				</Toggle>
 			</div>
 			<div class="flex items-center space-x-1 order-4">
 				<Avatar class="rotate-360 me-1 ms-3" onclick={dropdownUser.toggle}
@@ -206,10 +217,12 @@
 								</button>
 							</DropdownLi>
 							<DropdownLi>
-								<Toggle onclick={event => toggleflatView(event)}
-												bind:checked={flatViewChecked} size="small">
-									Flat View
-								</Toggle>
+								<div class="lg:hidden">
+									<Toggle onclick={event => toggleflatView(event)}
+													bind:checked={flatViewChecked} size="small">
+										Flat View
+									</Toggle>
+								</div>
 							</DropdownLi>
 						</DropdownUl>
 						<DropdownFooter class="px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600">Sign out
@@ -221,7 +234,7 @@
 		{/snippet}
 		<!--only show NavUl on desktop, no NavHamburger on mobile-->
 		<NavUl class="order-1 me-1 ms-1" {activeUrl}>
-			<NavLi href={PUBLIC_DISCOURSE_HOST}>West</NavLi>
+			<NavLi href={westUrl}>West</NavLi>
 		</NavUl>
 	</Navbar>
 </header>
@@ -259,9 +272,10 @@
 			</SidebarDropdownWrapper>
 		</SidebarGroup>
 		<SidebarGroup border>
-		<a href="https://github.com/fokx/svelte-forum">
-			<Span class='text-gray-900 dark:text-gray-100' decorationColor="orange">Powered by <Span gradient="amberToEmerald">svelte-forum</Span></Span>
-		</a>
+			<a href="https://github.com/fokx/svelte-forum">
+				<Span class='text-gray-900 dark:text-gray-100' decorationColor="orange">Powered by <Span
+					gradient="amberToEmerald">svelte-forum</Span></Span>
+			</a>
 		</SidebarGroup>
 	</Sidebar>
 
@@ -285,7 +299,7 @@
 	<BottomNavItem btnName="Experimental">
 		<span class="text-gray-900 dark:text-white">Under construction</span>
 	</BottomNavItem>
-	<BottomNavItem btnName="West" href={PUBLIC_DISCOURSE_HOST}>
+	<BottomNavItem btnName="West" href={westUrl}>
 		<span class="text-gray-900 dark:text-white">West</span>
 	</BottomNavItem>
 	<BottomNavItem btnName="New post" href="/compose">

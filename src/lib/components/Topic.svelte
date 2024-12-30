@@ -26,7 +26,7 @@
 {/snippet}
 
 {#snippet post_data(post)}
-	<div class="flex-grow justify-center">
+	<div class="flex-grow justify-center dotted-ul">
 		<Card class="max-w-3xl mb-2" href={`/t/${post.topic_id}`}>
 			{#if post.title}
 				<div class="flex justify-center">
@@ -53,7 +53,9 @@
 				{/await}
 
 			</div>
-			{@html process_cooked(post.excerpt)}
+			<div class="primary-links">
+				{@html process_cooked(post.excerpt)}
+			</div>
 		</Card>
 	</div>
 {/snippet}

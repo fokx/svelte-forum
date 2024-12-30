@@ -89,7 +89,7 @@
 
 		<ul>
 			{#each $latest_topics as topic}
-				<div class="topic-list">
+				<div>
 					<Topic post={topic} />
 				</div>
 			{/each}

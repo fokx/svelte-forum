@@ -1941,15 +1941,23 @@ button.toolbar-item.sl_font-increment {
     justify-content: flex-end;
 }
 
-a {
-    color: theme('colors.primary.500');
-}
 
-.topic-list {
-    a {
-        color: black;
+/*a {*/
+/*    color: theme('colors.primary.500');*/
+/*}*/
+.dotted-ul {
+    ul {
+        list-style: initial;
+        padding-left: 1.5em;
     }
 }
+
+.primary-links {
+    a {
+        color: theme('colors.primary.500');
+    }
+}
+
 
 .lightbox-wrapper {
     display: block;
@@ -2051,11 +2059,7 @@ aside.onebox .onebox-body p:last-child {
         color: theme('colors.primary.200');
     }
 
-    .topic-list {
-        a {
-            color: white;
-        }
-    }
+
 
     /*pre.lines-decorator {*/
     /*    --lines-bgcolor: theme('colors.secondary.950');*/
@@ -2078,10 +2082,6 @@ aside.onebox .onebox-body p:last-child {
 /*    vertical-align: text-bottom;*/
 /*}*/
 
-ul {
-    list-style: initial;
-    padding-left: 1.5em;
-}
 
 
 div.poll-outer div.poll {

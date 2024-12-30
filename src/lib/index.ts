@@ -128,7 +128,7 @@ export async function update_local_topic_by_discourse_id(topic_id:number) {
 }
 
 export async function update_local_topic_by_external_id(topic_external_id) {
-	let response = await get_url(`/t/external_id/${topic_external_id}.json`, {print: true});
+	let response = await get_url(`/t_external_id/${topic_external_id}.json`, {print: true});
 	return await update_local_topic(response);
 }
 async function update_local_topic(response) {

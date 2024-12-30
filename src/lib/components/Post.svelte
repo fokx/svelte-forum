@@ -129,7 +129,7 @@
 </script>
 
 {#snippet post_data(post)}
-	<div class="flex-grow justify-center">
+	<div class="flex-grow justify-center primary-links dotted-ul">
 		<Card class="max-w-3xl" >
 			{#if post.title}
 				<div class="flex justify-center">

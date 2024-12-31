@@ -120,6 +120,7 @@
 	// 	return undefined;
 	// }
 	if (browser) {
+		// TODO: ingnore mermaid in highlight.js
 		hljs.highlightAll();
 			// document.querySelectorAll('pre code').forEach((el) => {
 			// 	hljs.highlightElement(el);

@@ -48,6 +48,7 @@
 	// import ruby from "svelte-highlight/languages/ruby";
 	// import github from "svelte-highlight/styles/github";
 	import 'svelte-highlight/styles/github.css';
+	import mermaid from "mermaid";
 
 	let grv_title = liveQuery(() =>
 		dbb.rgv.get('title')
@@ -93,6 +94,7 @@
 	}
 
 	onMount(async () => {
+		mermaid.initialize({ startOnLoad: false, suppressErrorRendering: true });
 		await init_dbd_cache();
 		const flatViewCheckedLS = localStorage.getItem('FLAT_VIEW');
 		if (flatViewCheckedLS === null) {

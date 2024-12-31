@@ -1950,6 +1950,28 @@ button.toolbar-item.sl_font-increment {
         list-style: initial;
         padding-left: 1.5em;
     }
+    ol {
+        list-style: decimal;
+        padding-left: 1.5em;
+    }
+}
+.PlaygroundEditorTheme__ul {
+    list-style: initial;
+}
+.PlaygroundEditorTheme__ol1 {
+    list-style: decimal;
+}
+.PlaygroundEditorTheme__ol2 {
+    list-style: decimal;
+}
+.PlaygroundEditorTheme__ol3 {
+    list-style: decimal;
+}
+.PlaygroundEditorTheme__ol4 {
+    list-style: decimal;
+}
+.PlaygroundEditorTheme__ol5 {
+    list-style: decimal;
 }
 
 .primary-links {
@@ -2060,7 +2082,6 @@ aside.onebox .onebox-body p:last-child {
     }
 
 
-
     /*pre.lines-decorator {*/
     /*    --lines-bgcolor: theme('colors.secondary.950');*/
     /*}*/
@@ -2081,7 +2102,6 @@ aside.onebox .onebox-body p:last-child {
 /*    display: inline-flex;*/
 /*    vertical-align: text-bottom;*/
 /*}*/
-
 
 
 div.poll-outer div.poll {
@@ -2111,4 +2131,15 @@ div.poll-outer div.poll ul, div.poll-outer div.poll ol {
     list-style: none;
     display: inline-block;
     width: 100%;
+}
+
+.spoiler {
+    background-color: gray;
+    color: transparent;
+    user-select: none;
+}
+
+.spoiler:hover {
+    background-color: inherit;
+    color: inherit;
 }

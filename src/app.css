@@ -2143,3 +2143,22 @@ div.poll-outer div.poll ul, div.poll-outer div.poll ol {
     background-color: inherit;
     color: inherit;
 }
+
+table tr {
+    border-bottom: 1px solid #ddd; /* Adds a thin, gray horizontal line below each row */
+}
+.dotted-ul td, .dotted-ul table td {
+    padding: 3px 3px 3px .5em;
+}
+td img, td a {
+    display: inline-block;
+    vertical-align: middle;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.prose a {
+    text-decoration: none;
+}

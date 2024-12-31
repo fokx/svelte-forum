@@ -26,7 +26,7 @@
 {/snippet}
 
 {#snippet post_data(post)}
-	<div class="flex-grow justify-center dotted-ul">
+	<div class="flex-grow justify-center dotted-ul prose dark:prose-invert">
 		<Card class="max-w-3xl mb-2" href={`/t/${post.topic_id}`}>
 			{#if post.title}
 				<div class="flex justify-center">

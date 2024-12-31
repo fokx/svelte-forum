@@ -389,6 +389,8 @@ export function process_cooked(cooked: string) {
 	// console.log(cooked);
 	// const dom = htmlparser2.parseDocument(cooked);
 	cooked = cooked.replaceAll('"/uploads/short-url/', `"${PUBLIC_DISCOURSE_HOST}/uploads/short-url/`)
+	cooked = cooked.replaceAll('"/letter_avatar_proxy/', `"${PUBLIC_DISCOURSE_HOST}/letter_avatar_proxy/`)
+	cooked = cooked.replaceAll('"/user_avatar/', `"${PUBLIC_DISCOURSE_HOST}/user_avatar/`)
 	return cooked
 
 	// const preElements = domutils.findAll((elem) => elem.tagName === 'pre', dom.children);

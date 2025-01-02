@@ -28,23 +28,6 @@
 		}
 		return _this_post;
 	}
-	onMount(() => {
-		// TODO this mermaid specific block should only be run once
-		// which means it should be duplicated in different routes
-		// how can we get rid of it (and only place it inside the Post component)?
-		const renderMermaidDiagrams = async () => {
-			const mermaidElements = document.querySelectorAll('pre[data-code-wrap="mermaid"] > code.lang-mermaid');
-			const renderPromises = Array.from(mermaidElements).map(async (element, index) => {
-				const graphDefinition = element.textContent;
-				if (graphDefinition) {
-					const { svg } = await mermaid.render(`mermaid-${index}`, graphDefinition);
-					element.innerHTML = svg;
-				}
-			});
-			await Promise.all(renderPromises);
-		};
-		renderMermaidDiagrams();
-	});
 
 </script>
 

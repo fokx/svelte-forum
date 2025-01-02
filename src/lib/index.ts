@@ -7,16 +7,93 @@ import {
 import { dbb } from '$lib/dbb';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { page } from '$app/state';
-import * as htmlparser2 from "htmlparser2";
-import { render as dom_render } from "dom-serializer";
-import * as domutils from "domutils";
-import hljs from 'highlight.js';
-import Highlight from "svelte-highlight";
+import * as htmlparser2 from 'htmlparser2';
+import { render as dom_render } from 'dom-serializer';
+import * as domutils from 'domutils';
 import EmojiConvertor from 'emoji-js';
+import basex from 'base-x';
+
 const emoji = new EmojiConvertor();
 emoji.replace_mode = 'unified';
 emoji.img_set = 'google'; // this line seems to have no effect, see https://github.com/iamcal/emoji-data
+const BASE62_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const bs62 = basex(BASE62_ALPHABET);
+
+function zero(n, max) {
+	n = n.toString(16).toUpperCase();
+	while (n.length < max) {
+		n = '0' + n;
+	}
+	return n;
+}
+
+function shorturl2full(s) {
+	var digits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	var result = 0;
+	for (var i = 0; i < s.length; i++) {
+		var p = digits.indexOf(s[i]);
+		if (p < 0) {
+			return NaN;
+		}
+		result += p * Math.pow(digits.length, s.length - i - 1);
+	}
+	return result;
+}
+function buffer2hex_display(buffer) {
+	// https://github.com/gagle/node-hex
+	const rows = Math.ceil(buffer.length / 16);
+	const last = buffer.length % 16 || 16;
+	let offsetLength = buffer.length.toString(16).length;
+	if (offsetLength < 6) offsetLength = 6;
+
+	let str = 'Offset';
+	while (str.length < offsetLength) {
+		str += ' ';
+	}
+
+	str = '\u001b[36m' + str + '  ';
+
+	let i;
+	for (i = 0; i < 16; i++) {
+		str += ' ' + zero(i, 2);
+	}
+
+	str += '\u001b[0m\n';
+	if (buffer.length) str += '\n';
+
+	let b = 0;
+	let lastBytes;
+	let lastSpaces;
+	let v;
+
+	for (i = 0; i < rows; i++) {
+		str += '\u001b[36m' + zero(b, offsetLength) + '\u001b[0m  ';
+		lastBytes = i === rows - 1 ? last : 16;
+		lastSpaces = 16 - lastBytes;
+
+		let j;
+		for (j = 0; j < lastBytes; j++) {
+			str += ' ' + zero(buffer[b], 2);
+			b++;
+		}
+
+		for (j = 0; j < lastSpaces; j++) {
+			str += '   ';
+		}
+
+		b -= lastBytes;
+		str += '   ';
+
+		for (j = 0; j < lastBytes; j++) {
+			v = buffer[b];
+			str += (v > 31 && v < 127) || v > 159 ? String.fromCharCode(v) : '.';
+			b++;
+		}
+
+		str += '\n';
+	}
+	return str;
+}
 
 function generateRandomString(length: number) {
 	let result = '';
@@ -121,20 +198,21 @@ export async function update_local_categories() {
 	}
 }
 
-
-export async function update_local_topic_by_discourse_id(topic_id:number) {
+export async function update_local_topic_by_discourse_id(topic_id: number) {
 	let response = await get_url(`/t/${topic_id}.json`);
 	return await update_local_topic(response);
 }
 
 export async function update_local_topic_by_external_id(topic_external_id) {
-	let response = await get_url(`/t_external_id/${topic_external_id}.json`, {print: true});
+	let response = await get_url(`/t_external_id/${topic_external_id}.json`, { print: true });
 	return await update_local_topic(response);
 }
+
 export async function update_local_topic_by_topic_id(topic_id) {
-	let response = await get_url(`/t/${topic_id}.json`, {print: true});
+	let response = await get_url(`/t/${topic_id}.json`, { print: true });
 	return await update_local_topic(response);
 }
+
 async function update_local_topic(response) {
 	if (response.status === 200) {
 		response = await response.json();
@@ -212,7 +290,6 @@ async function update_topics(response) {
 					updated_at: user?.updated_at
 				});
 			}
-
 		}
 		const topics = response.topic_list.topics;
 		for (const topic of topics) {
@@ -244,7 +321,7 @@ async function update_topics(response) {
 				last_poster_username: topic?.last_poster_username,
 				original_poster_user_id: original_poster?.user_id,
 				bumped_at: topic?.bumped_at,
-				synced_at: new Date(),
+				synced_at: new Date()
 			};
 			// posts: '&id, topic_id, post_number, reply_to_post_number, last_posted_at', //[topic_id+post_number],[topic_id+reply_to_post_number],
 			posts_to_update.push(p);
@@ -254,8 +331,13 @@ async function update_topics(response) {
 		return posts_to_update;
 	}
 }
-export async function update_latest_topics(page=0) {
-	let response = await get_url(`/latest.json`, { no_definitions: true, page: page, order: 'activity'});
+
+export async function update_latest_topics(page = 0) {
+	let response = await get_url(`/latest.json`, {
+		no_definitions: true,
+		page: page,
+		order: 'activity'
+	});
 	return await update_topics(response);
 }
 
@@ -294,7 +376,7 @@ export async function update_user_replies(username: string) {
 				// image_url: reply?.image_url,
 				// last_posted_at: reply?.last_posted_at,
 				// last_poster_username: reply?.last_poster_username,
-				acting_username: reply?.acting_username,
+				acting_username: reply?.acting_username
 				// bumped_at: reply?.bumped_at
 			};
 			posts_to_update.push(p);
@@ -344,9 +426,6 @@ export async function get_avatar_url_by_username(username) {
 	}
 }
 
-
-
-
 export async function fetch_post_by_external_id(post_external_id) {
 	// get `/posts/{id}.json` with  { include_raw: true } will return raw with post
 	// while query with external_id does not.
@@ -356,16 +435,18 @@ export async function fetch_post_by_external_id(post_external_id) {
 		const post = await response.json();
 		// TODO: this add another round-trip to the server, which makes loading individual post slow
 		// don't await update_local_topic_by_discourse_id may mitigate this issue a bit
-		let topic_posts =  update_local_topic_by_discourse_id(post.topic_id);
+		let topic_posts = update_local_topic_by_discourse_id(post.topic_id);
 		return await dbb.posts.get(post_external_id);
 	}
 }
+
 export function convertHtmlToText(html) {
 	const doc = new DOMParser().parseFromString(html, 'text/html');
 	return doc.body.innerText;
 }
 
-export const scrollable_main_class= 'h-[82vh] max-sm:h-[80vh] overflow-y-scroll';
+export const scrollable_main_class = 'h-[82vh] max-sm:h-[80vh] overflow-y-scroll';
+
 export function sleep_ms(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms ?? 200));
 }
@@ -380,32 +461,99 @@ const html_unchecked_square = `<svg xmlns="http://www.w3.org/2000/svg" width="16
   <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
 </svg>`;
 
-export function process_cooked(cooked: string) {
-	if (cooked === undefined || cooked === null || cooked === '' ) {
-		return '';
-	}
-	cooked = cooked.replaceAll(`<span class="chcklst-box checked fa fa-square-check-o fa-fw">`,html_checked_square+`<span class="chcklst-box checked">`);
-	cooked = cooked.replaceAll(`<span class="chcklst-box fa fa-square-o fa-fw">`,html_unchecked_square+`<span class="chcklst-box unchecked">`);
-	// console.log(cooked);
-	// const dom = htmlparser2.parseDocument(cooked);
-	cooked = cooked.replaceAll('"/uploads/short-url/', `"${PUBLIC_DISCOURSE_HOST}/uploads/short-url/`)
-	cooked = cooked.replaceAll('"/letter_avatar_proxy/', `"${PUBLIC_DISCOURSE_HOST}/letter_avatar_proxy/`)
-	cooked = cooked.replaceAll('"/user_avatar/', `"${PUBLIC_DISCOURSE_HOST}/user_avatar/`)
-	return cooked
-
-	// const preElements = domutils.findAll((elem) => elem.tagName === 'pre', dom.children);
-	// preElements.forEach((preElem) => {
-	// 	const codeElements = domutils.findAll((elem) => elem.tagName === 'code', [preElem]);
-	// 	if (codeElements.length > 0) {
-	// 		// let removed = dom_render(preElem, { encodeEntities : 'utf8' });
-	// 		// let new_el= hljs.highlightElement(preElem).value;
-	// 		// domutils.replaceElement(preElem, new_el);
-	// 	}
-	// });
-
-	// let html = dom_render(dom, { encodeEntities : 'utf8' });
-
-	// console.log(html);
-	// return html;
+export function decodeUploadsLink(encoded) {
+	const decodedRev = bs62.decode(encoded);
+	let ret2 = buffer2hex(decodedRev);
+	console.log(ret2);
+	let ret = Buffer.from(decodedRev, 'utf8').toString('hex');
+	console.warn(ret);
+	return ret;
 }
 
+export function process_cooked(cooked: string) {
+	if (cooked === undefined || cooked === null || cooked === '') {
+		return '';
+	}
+	cooked = cooked.replaceAll(
+		`<span class="chcklst-box checked fa fa-square-check-o fa-fw">`,
+		html_checked_square + `<span class="chcklst-box checked">`
+	);
+	cooked = cooked.replaceAll(
+		`<span class="chcklst-box fa fa-square-o fa-fw">`,
+		html_unchecked_square + `<span class="chcklst-box unchecked">`
+	);
+	// console.log(cooked);
+	cooked = cooked.replaceAll(
+		'"/uploads/short-url/',
+		`"${PUBLIC_DISCOURSE_HOST}/uploads/short-url/`
+	);
+	cooked = cooked.replaceAll(
+		'"/letter_avatar_proxy/',
+		`"${PUBLIC_DISCOURSE_HOST}/letter_avatar_proxy/`
+	);
+	cooked = cooked.replaceAll('"/user_avatar/', `"${PUBLIC_DISCOURSE_HOST}/user_avatar/`);
+
+	// return cooked
+	const dom = htmlparser2.parseDocument(cooked);
+
+	const attachmentLinks = domutils.findAll(
+		(e) => e.tagName === 'a' && e.attribs.class === 'attachment',
+		dom.children
+	);
+	attachmentLinks.forEach((ele) => {
+		return;
+		// TODO: this should run once for whole page, not for each post
+		// require `prevent anons from downloading files` to be disabled in Discourse
+		console.log(ele);
+		// embed pdf as ifram
+		let iframe = document.createElement('iframe');
+		// iframe.src= ele.attribs.href;
+		iframe.src = '';
+		iframe.width = '100%';
+		iframe.height = '500px';
+		iframe.loading = 'lazy';
+		iframe.type = 'application/pdf';
+		iframe.loading = 'lazy';
+		iframe.classList.add('pdf-preview');
+		iframe.classList.add('pdf-attachment');
+		// the pdf is set to Content-Disposition: attachment; filename="filename.jpg"
+		// on the server. this means we can't just use the href as the
+		// src for the pdf preview elements.
+		const httpRequest = new XMLHttpRequest();
+		console.warn(ele.attribs.href);
+		httpRequest.open('GET', ele.attribs.href);
+		httpRequest.responseType = 'blob';
+
+		// https://meta.discourse.org/t/converting-short-upload-urls-to-full-urls/131760/11?u=fokx
+		// console.log(shorturl2full('5CUMf1wInshJKKaIWpSHoIByVk5'));
+		// console.log(decodeUploadsLink('5CUMf1wInshJKKaIWpSHoIByVk5'));
+
+		httpRequest.onreadystatechange = () => {
+			if (httpRequest.readyState !== XMLHttpRequest.DONE) {
+				return;
+			}
+			console.warn(httpRequest.status);
+			if (httpRequest.status === 200) {
+				const src = URL.createObjectURL(httpRequest.response);
+				console.warn(src);
+				iframe.src = src;
+			}
+		};
+		httpRequest.send();
+
+		// iframe.frameBorder='0';
+		// iframe.scrolling='no';
+		// iframe.title='pdf';
+
+		console.log(iframe);
+		// document.body.appendChild(iframe);
+		domutils.append(ele, iframe);
+		// domutils.replaceElement(ele, iframe);
+		// let removed = dom_render(ele, { encodeEntities : 'utf8' });
+		// let new_el= hljs.highlightElement(ele).value;
+		// domutils.replaceElement(ele, new_el);
+	});
+
+	let html = dom_render(dom, { encodeEntities: 'utf8' });
+	return html;
+}

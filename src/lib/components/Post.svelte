@@ -10,6 +10,7 @@
 	import Self from './Post.svelte';
 	import { fly, slide } from 'svelte/transition';
 	import hljs from 'highlight.js';
+	import mermaid from 'mermaid';
 	let {
 		post,
 		indent = 0,
@@ -88,7 +89,7 @@
 		}
 	}
 
-	onMount(() => {
+	$effect(() => {
 		autosaveTimer = setInterval(() => {
 			if (!composerComponent) {
 				return;
@@ -119,13 +120,7 @@
 	// 	// TODO get user info
 	// 	return undefined;
 	// }
-	if (browser) {
-		// TODO: ingnore mermaid in highlight.js
-		hljs.highlightAll();
-			// document.querySelectorAll('pre code').forEach((el) => {
-			// 	hljs.highlightElement(el);
-			// });
-	}
+
 
 </script>
 

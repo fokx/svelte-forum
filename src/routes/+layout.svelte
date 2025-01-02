@@ -237,7 +237,7 @@
 			</div>
 
 		{/snippet}
-		<!--only show NavUl on desktop, no NavHamburger on mobile-->
+		<!--TODO: this NavLi doesn't show on medium screen width-->
 		<NavUl class="order-1 me-1 ms-1" {activeUrl}>
 			<NavLi href={westUrl}>
 				<ChevronLeft />

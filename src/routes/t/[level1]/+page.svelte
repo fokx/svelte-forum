@@ -27,32 +27,77 @@
 		return posts;
 	}
 	import { siteTitle } from '$lib/stores';
+	import hljs from 'highlight.js';
+	import {
+		convertToMarkdownString,
+		PLAYGROUND_TRANSFORMERS
+	} from '../../../../../svelte-lexical/packages/svelte-lexical';
 	$effect(() => {
+		if (browser) {
+			// TODO: ingnore mermaid in highlight.js
+			hljs.highlightAll();
+			hljs.configure({ ignoreUnescapedHTML: true });
+			// document.querySelectorAll('pre code').forEach((el) => {
+			// 	hljs.highlightElement(el);
+			// });
+		}
 		if (browser && $topic_posts && $topic_posts.length > 0) {
 			let title = $topic_posts[0].title;
 			siteTitle.set(title);
 		}
-	});
-	let grv_preference_flat_view = liveQuery(() =>
-		dbb.rgv.get('preference_flat_view')
-	);
-	onMount(() => {
-		// TODO this mermaid specific block should only be run once
-		// which means it should be duplicated in different routes
-		// how can we get rid of it (and only place it inside the Post component)?
+		// if (isRendered) {
+		// 	return;
+		// }
+		// isRendered = true;
+		// const renderMermaidDiagrams = async () => {
+		// 	const element = document.querySelectorAll('pre[data-code-wrap="mermaid"] > code.lang-mermaid').at(-1);
+		// 		const graphDefinition = element.textContent;
+		// 		if (graphDefinition) {
+		// 			const { svg } = await mermaid.render(`mermaid`, graphDefinition);
+		// 			element.innerHTML = svg;
+		// 			element.classList.remove('lang-mermaid'); // Remove the class to prevent re-selection
+		// 			element.classList.add('mermaid-rendered'); // Optionally add a new class to indicate it has been rendered
+		// 		}
+		// };
+
 		const renderMermaidDiagrams = async () => {
 			const mermaidElements = document.querySelectorAll('pre[data-code-wrap="mermaid"] > code.lang-mermaid');
+			console.log('mermaidElements', mermaidElements);
+			let prev_n_str = localStorage.getItem('mermaidElementsNum');
+			if (prev_n_str === null) {
+				prev_n_str = '0';
+			}
+			let prev_n = parseInt(prev_n_str);
+			let cur_n = mermaidElements.length;
+			if (cur_n > prev_n) {
+				localStorage.setItem('mermaidElementsNum', cur_n.toString());
+			} else {
+				localStorage.setItem('mermaidElementsNum', '0');
+			}
+
 			const renderPromises = Array.from(mermaidElements).map(async (element, index) => {
+				console.log('render 1');
 				const graphDefinition = element.textContent;
 				if (graphDefinition) {
 					const { svg } = await mermaid.render(`mermaid-${index}`, graphDefinition);
-					element.innerHTML = svg;
+					if (element.classList.contains('lang-mermaid')) {
+						element.innerHTML = svg;
+						console.log('svg', svg);
+						element.classList.remove('lang-mermaid'); // Remove the class to prevent re-selection
+						element.classList.add('mermaid-rendered'); // Optionally add a new class to indicate it has been rendered
+					} else {
+						console.log('skip');
+					}
 				}
 			});
 			await Promise.all(renderPromises);
 		};
 		renderMermaidDiagrams();
+
 	});
+	let grv_preference_flat_view = liveQuery(() =>
+		dbb.rgv.get('preference_flat_view')
+	);
 </script>
 
 {#await load_or_fetch_topic_posts()}

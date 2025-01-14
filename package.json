@@ -70,6 +70,8 @@
 		"svelte-lexical": "link:../svelte-lexical/packages/svelte-lexical",
 		"tailwind-variants": "^0.3.0",
 		"url-join": "^5.0.0",
+		"webtorrent": "^2.5.12",
+		"ws": "^8.18.0",
 		"y-websocket": "2.0.4",
 		"yjs": "13.6.20"
 	}

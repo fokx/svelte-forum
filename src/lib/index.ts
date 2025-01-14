@@ -365,7 +365,7 @@ export function convertHtmlToText(html) {
 	return doc.body.innerText;
 }
 
-export const scrollable_main_class= 'h-[82vh] max-sm:h-[80vh] overflow-y-scroll';
+export const scrollable_main_class= 'h-[80vh] sm:h-[82vh] overflow-y-scroll';
 export function sleep_ms(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms ?? 200));
 }

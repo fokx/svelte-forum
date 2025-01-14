@@ -1,5 +1,12 @@
 <script lang="ts">
-	import { assemble_avatar_full_url, display_time, GeneratePostId, post_url, process_cooked } from '$lib';
+	import {
+		assemble_avatar_full_url,
+		display_time,
+		GeneratePostId,
+		get_cached_avatar_url_by_user_id,
+		post_url,
+		process_cooked
+	} from '$lib';
 	import { Avatar, Card } from 'svelte-5-ui-lib';
 	import RichTextComposer from '$lib/components/MyRichTextComposer.svelte';
 	import { convertToMarkdownString, PLAYGROUND_TRANSFORMERS } from '../../../../svelte-lexical/packages/svelte-lexical';
@@ -128,6 +135,10 @@
 
 </script>
 
+{#snippet avatar_in_post(a_t)}
+	<Avatar size="md" class="rotate-360 me-1 ms-3" src={assemble_avatar_full_url(a_t)} />
+{/snippet}
+
 {#snippet post_data(post)}
 	<div class="flex-grow justify-center primary-links dotted-ul prose dark:prose-invert">
 		<Card class="max-w-3xl" >
@@ -137,7 +148,15 @@
 				</div>
 			{/if}
 			<div class="flex justify-between items-center mb-2">
-				<Avatar size="md" class="rotate-360 me-1 ms-3" src={assemble_avatar_full_url(post.avatar_template)} />
+				{#if post.avatar_template}
+					{@render avatar_in_post(post.avatar_template)}
+				{:else if post.original_poster_user_id}
+					{#await get_cached_avatar_url_by_user_id(post.original_poster_user_id)}
+						{@render avatar_in_post('')}
+					{:then a_t}
+						{@render avatar_in_post(a_t)}
+					{/await}
+				{/if}
 				<h6 class="mt-4 text-md font-bold tracking-tight">
 					{#if (post.updated_at - post.created_at) > 5 * 60 * 1000}
 						<div>updated at: {display_time(post.updated_at)}</div>
@@ -146,7 +165,11 @@
 					{/if}
 				</h6>
 			</div>
-			{@html process_cooked(post.cooked)}
+			{#if post.cooked}
+				{@html process_cooked(post.cooked)}
+			{:else if post.excerpt}
+				{@html process_cooked(post.excerpt + '<br>......')}
+			{/if}
 			<div class="flex justify-end items-center">
 				<a class="text-blue-800 dark:text-blue-500 text-xl mr-2" href={`/p/${post.id}`}># {post.post_number}</a>
 				<button

@@ -31,13 +31,14 @@
 	import ChevronLeft from 'svelte-bootstrap-svg-icons/ChevronLeft.svelte';
 	import Github from 'svelte-bootstrap-svg-icons/Github.svelte';
 	import PencilSquare from 'svelte-bootstrap-svg-icons/PencilSquare.svelte';
+	import ChatDots from 'svelte-bootstrap-svg-icons/ChatDots.svelte';
 	import PersonFill from 'svelte-bootstrap-svg-icons/PersonFill.svelte';
 	import Plus from 'svelte-bootstrap-svg-icons/Plus.svelte';
 	import Sliders2Vertical from 'svelte-bootstrap-svg-icons/Sliders2Vertical.svelte';
 	import { assemble_avatar_full_url } from '$lib';
 	import { dbb } from '$lib/dbb';
 	import { onMount } from 'svelte';
-	import { PUBLIC_DISCOURSE_HOST, PUBLIC_SITE_TITLE, PUBLIC_TITLE_SLICE_LENGTH } from '$env/static/public';
+	import { PUBLIC_DISCOURSE_HOST, PUBLIC_SITE_TITLE } from '$env/static/public';
 	import { browser } from '$app/environment';
 	import { liveQuery } from 'dexie';
 	import { siteTitle } from '$lib/stores'; // Import the store
@@ -131,28 +132,36 @@
 		PUBLIC_SITE_TITLE
 	);
 
+	function truncate_title(title: string, length: number) {
+		if (title.length > length) {
+			title = title.slice(0, length) + '...';
+		}
+		return title;
+	}
 
 	function process_title(post_title: string) {
 		let title: string;
 		if (page.url.pathname === '/') {
 			title = PUBLIC_SITE_TITLE;
+			if (browser) {
+				document.title = PUBLIC_SITE_TITLE;
+			}
 		} else {
 			title = page.url.pathname.replaceAll('/', ' ');
-			if (browser && post_title && (page.url.pathname.startsWith('/t/') || page.url.pathname.startsWith('/p/'))) {
+			if (browser && post_title && (page.url.pathname.startsWith('/t/')
+				|| page.url.pathname.startsWith('/chat')
+				|| page.url.pathname.startsWith('/p/'))) {
 				title = post_title;
 			}
-			if (title.length > parseInt(PUBLIC_TITLE_SLICE_LENGTH)) {
-				title = title.slice(0, parseInt(PUBLIC_TITLE_SLICE_LENGTH)) + '...';
+			if (browser) {
+				document.title = truncate_title(title, 40) + ` - ${PUBLIC_SITE_TITLE}`;
 			}
-			title += ' - ' + PUBLIC_SITE_TITLE;
 		}
 
-		if (browser) {
-			document.title = title;
-		}
 		return title;
 	}
-	const githubURL = "https://github.com/fokx/svelte-forum";
+
+	const githubURL = 'https://github.com/fokx/svelte-forum';
 	// const code = "const add = (a: number, b: number) => a + b;";
 </script>
 
@@ -163,7 +172,8 @@
 <header
 	class="sticky top-0 z-50 mx-auto w-full flex-none border-b border-gray-200 bg-gray-50 lg:pl-4 dark:border-gray-600 dark:bg-gray-950">
 	<Navbar divClass="h-[5vh]"
-					navClass="w-full divide-gray-200 border-gray-200 bg-gray-50 dark_bg_theme text-gray-500 dark:divide-gray-700 dark:border-gray-700 dark:transparent dark:text-gray-400 sm:px-4"
+					navClass="w-full divide-gray-200 border-gray-200 bg-gray-50 dark_bg_theme text-gray-500 dark:divide-gray-700
+					 dark:border-gray-700 dark:transparent dark:text-gray-400 sm:px-4"
 					hamburgerMenu={false} fluid div2Class="ml-auto w-full">
 		{#snippet brand()}
 			<button onclick={demoSidebarUi.toggle} type="button" class="z-50 mr-4 mt-1 md:hidden"
@@ -176,12 +186,37 @@
 								d="M1 1h15M1 7h15M1 13h15" />
 				</svg>
 			</button>
-			<NavBrand siteName={$currentSiteTitle} spanClass="text-xs sm:text-xs md:text-xl lg:text-xl">
-				<img width="20" src="/images/svelte-icon.png" alt="site icon" />
-			</NavBrand>
+			<div class="block sm:hidden">
+				<NavBrand
+					siteName={truncate_title($currentSiteTitle, 12) + ` - ${PUBLIC_SITE_TITLE}`}
+					spanClass="text-xs">
+					<img width="15" src="/images/svelte-icon.png" alt="site icon" />
+				</NavBrand>
+			</div>
+			<div class="hidden sm:max-md:block">
+				<NavBrand
+					siteName={truncate_title($currentSiteTitle, 15) + ` - ${PUBLIC_SITE_TITLE}`}
+					spanClass="sm:text-xs">
+					<img width="15" src="/images/svelte-icon.png" alt="site icon" />
+				</NavBrand>
+			</div>
+			<div class="hidden md:max-lg:block">
+				<NavBrand
+					siteName={truncate_title($currentSiteTitle, 22) + ` - ${PUBLIC_SITE_TITLE}`}
+					spanClass="md:text-base">
+					<img width="15" src="/images/svelte-icon.png" alt="site icon" />
+				</NavBrand>
+			</div>
+			<div class="hidden lg:block">
+				<NavBrand
+					siteName={truncate_title($currentSiteTitle, 45) + ` - ${PUBLIC_SITE_TITLE}`}
+					spanClass="lg:text-lg">
+					<img width="15" src="/images/svelte-icon.png" alt="site icon" />
+				</NavBrand>
+			</div>
 		{/snippet}
 		{#snippet navSlotBlock()}
-			<!--            <div class="flex items-center space-x-1 order-2">-->
+			<!--            <div class="flex items-center space-x-1 order-4">-->
 			<!--                <Button class="me-1 rounded-lg bg-white p-2.5 text-sm text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 lg:hidden dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700">-->
 			<!--                    <Search class="h-5 w-5"/>-->
 			<!--                </Button>-->
@@ -192,14 +227,19 @@
 			<!--                    <Input id="search-navbar" class="bg-transparent ps-10" placeholder="Search..."/>-->
 			<!--                </div>-->
 			<!--            </div>-->
-			<div class="hidden lg:flex items-center space-x-1 order-3">
+			<div class="hidden sm:flex items-center space-x-0.5 order-3">
 				<Darkmode />
 				<Toggle onclick={event => toggleflatView(event)}
 								bind:checked={flatViewChecked} size="small">
 					Flat View
 				</Toggle>
 			</div>
-			<div class="flex items-center space-x-1 order-4">
+			<div class="order-2">
+				<a href={westUrl}>
+					<ChevronLeft />
+				</a>
+			</div>
+			<div class="flex items-center space-x-1 order-5">
 				<Avatar class="rotate-360 me-1 ms-3" onclick={dropdownUser.toggle}
 								src={assemble_avatar_full_url(data.user?.avatar_template)}
 								dot={{ color: "green" }} />
@@ -214,13 +254,13 @@
 						<DropdownUl>
 							<DropdownLi href="/settings">Settings</DropdownLi>
 							<DropdownLi>
-								<button class="lg:hidden w-full text-left flex items-center" onclick={event => toggleDarkMode(event)}>
+								<button class="flex md:hidden w-full text-left items-center" onclick={event => toggleDarkMode(event)}>
 									<Darkmode class="darkmode-button-in-avatar-dropdown" />
 									<span class="ml-2">Toggle Dark</span>
 								</button>
 							</DropdownLi>
 							<DropdownLi>
-								<div class="lg:hidden">
+								<div class="md:hidden">
 									<Toggle onclick={event => toggleflatView(event)}
 													bind:checked={flatViewChecked} size="small">
 										Flat View
@@ -236,7 +276,7 @@
 
 		{/snippet}
 		<!--only show NavUl on desktop, no NavHamburger on mobile-->
-		<NavUl class="order-1 me-1 ms-1" {activeUrl}>
+		<NavUl class="order-1 me-1 ms-1 hidden" {activeUrl}>
 			<NavLi href={westUrl}>
 				<ChevronLeft />
 			</NavLi>
@@ -244,15 +284,22 @@
 	</Navbar>
 </header>
 
+
 <div class="lg:flex" id="sidebar">
 	<Sidebar isSingle={false} backdrop={false} isOpen={isDemoOpen} closeSidebar={closeDemoSidebar}
-					 activeClass="flex items-center p-1 text-base font-normal text-white dark_bg_theme dark:hover:text-white hover:text-gray-900 bg-primary-700 rounded-lg dark:divide-gray-700 dark:border-gray-700 dark:transparent dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+					 activeClass="flex items-center p-1 text-base font-normal text-white dark_bg_theme dark:hover:text-white hover:text-gray-900
+					  bg-primary-700 rounded-lg dark:divide-gray-700 dark:border-gray-700 dark:transparent dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
 					 nonActiveClass="p-1 hover:bg-gray-200" divClass="bg-gray-50"
 					 class="top-[62px] h-screen dark:bg-gray-900" activeUrl={activeUrl}>
 		<SidebarGroup>
 			<SidebarItem label="Home" href="/">
 				{#snippet iconSlot()}
 					<HouseDoor />
+				{/snippet}
+			</SidebarItem>
+			<SidebarItem label="Chat" href="/chat">c
+				{#snippet iconSlot()}
+					<ChatDots />
 				{/snippet}
 			</SidebarItem>
 			<SidebarItem label="Compose" href="/compose">c
@@ -285,7 +332,7 @@
 	</Sidebar>
 
 	<main
-		class="text-gray-900 dark:text-gray-100 mx-auto min-w-0 max-w-8xl flex-auto px-8 pb-20 lg:static lg:max-h-full overflow-auto md:pl-72">
+		class="text-gray-900 dark:text-gray-100 mx-auto min-w-0 max-w-8xl flex-auto px-1 pb-20 lg:static lg:max-h-full overflow-auto md:pl-72">
 		<div id="mainContent" class="mt-[1vh]">
 			{@render children()}
 		</div>
@@ -293,7 +340,7 @@
 </div>
 
 <!--only show BottomNav on mobile-->
-<BottomNav outerClass="hidden max-sm:block h-[8vh]" position="fixed" navType="group" innerClass="grid-cols-5">
+<BottomNav outerClass="block sm:hidden h-[8vh]" position="fixed" navType="group" innerClass="grid-cols-5">
 	<!--{#snippet header()}-->
 	<!--    <BottomNavHeader>-->
 	<!--        <BottomNavHeaderItem itemName="New"/>-->

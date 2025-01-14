@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hybrid P2P Chat</title>
+    <style>
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        #messages { 
+            height: 400px; 
+            border: 1px solid #ccc; 
+            overflow-y: auto; 
+            margin-bottom: 10px; 
+            padding: 10px;
+        }
+        #messageInput { width: 80%; padding: 5px; }
+        .peer-list {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+        .status { color: #666; font-style: italic; }
+        .message { margin: 5px 0; padding: 5px; border-radius: 4px; }
+        .peer { 
+            padding: 5px; 
+            margin: 2px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .connected { color: green; }
+        .disconnected { color: red; }
+        .network-stats {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hybrid P2P Chat</h1>
+        
+        <div class="network-stats">
+            <h3>Network Status</h3>
+            <div>Your ID: <strong id="localId"></strong></div>
+            <div>Network Size: <span id="networkSize">1</span> peers</div>
+            <div>Connection Type: <span id="connectionType">Initializing...</span></div>
+        </div>
+
+        <div class="peer-list">
+            <h3>Connected Peers</h3>
+            <div id="peerList"></div>
+        </div>
+        
+        <div id="messages"></div>
+        <div id="input">
+            <input type="text" id="messageInput" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const userId = crypto.randomUUID();
+        document.getElementById('localId').textContent = userId;
+
+        const peers = new Map(); // Active peer connections
+        const dataChannels = new Map(); // Active data channels
+        const knownPeers = new Set(); // All known peer IDs
+        let discoveryWs = null; // WebSocket connection to discovery server
+        
+        const configuration = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+
+        // Connect to discovery server and initialize the network
+        async function initializeNetwork() {
+            discoveryWs = new WebSocket('ws://localhost:3000');
+            updateConnectionType('Discovery Server');
+
+            discoveryWs.onopen = () => {
+                displayStatus('Connected to discovery server');
+                discoveryWs.send(JSON.stringify({
+                    type: 'register',
+                    userId: userId
+                }));
+            };
+
+            discoveryWs.onmessage = async (event) => {
+                const message = JSON.parse(event.data);
+                
+                switch (message.type) {
+                    case 'initial-peers':
+                        // Connect to initial peers
+                        for (const peerId of message.peers) {
+                            if (!peers.has(peerId)) {
+                                await initiatePeerConnection(peerId);
+                            }
+                        }
+                        break;
+
+                    case 'offer':
+                        await handleOffer(message);
+                        break;
+
+                    case 'answer':
+                        await handleAnswer(message);
+                        break;
+
+                    case 'ice-candidate':
+                        await handleIceCandidate(message);
+                        break;
+                }
+            };
+
+            discoveryWs.onclose = () => {
+                displayStatus('Disconnected from discovery server - operating in P2P mode');
+                updateConnectionType('Pure P2P');
+            };
+        }
+
+        async function initiatePeerConnection(peerId) {
+            if (peers.has(peerId) || peerId === userId) return;
+
+            const peerConnection = new RTCPeerConnection(configuration);
+            peers.set(peerId, peerConnection);
+
+            const dataChannel = peerConnection.createDataChannel('chat');
+            setupDataChannel(dataChannel, peerId);
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate && discoveryWs) {
+                    discoveryWs.send(JSON.stringify({
+                        type: 'ice-candidate',
+                        target: peerId,
+                        data: event.candidate
+                    }));
+                }
+            };
+
+            try {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                if (discoveryWs) {
+                    discoveryWs.send(JSON.stringify({
+                        type: 'offer',
+                        target: peerId,
+                        data: offer
+                    }));
+                }
+            } catch (error) {
+                console.error('Error creating offer:', error);
+                cleanupPeer(peerId);
+            }
+        }
+
+        async function handleOffer(message) {
+            if (peers.has(message.from)) return;
+
+            const peerConnection = new RTCPeerConnection(configuration);
+            peers.set(message.from, peerConnection);
+
+            peerConnection.ondatachannel = event => {
+                setupDataChannel(event.channel, message.from);
+            };
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate && discoveryWs) {
+                    discoveryWs.send(JSON.stringify({
+                        type: 'ice-candidate',
+                        target: message.from,
+                        data: event.candidate
+                    }));
+                }
+            };
+
+            try {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(message.data));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+
+                if (discoveryWs) {
+                    discoveryWs.send(JSON.stringify({
+                        type: 'answer',
+                        target: message.from,
+                        data: answer
+                    }));
+                }
+            } catch (error) {
+                console.error('Error handling offer:', error);
+                cleanupPeer(message.from);
+            }
+        }
+
+        async function handleAnswer(message) {
+            const peerConnection = peers.get(message.from);
+            if (peerConnection) {
+                try {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(message.data));
+                } catch (error) {
+                    console.error('Error handling answer:', error);
+                    cleanupPeer(message.from);
+                }
+            }
+        }
+
+        async function handleIceCandidate(message) {
+            const peerConnection = peers.get(message.from);
+            if (peerConnection) {
+                try {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(message.data));
+                } catch (error) {
+                    console.error('Error handling ICE candidate:', error);
+                }
+            }
+        }
+
+        function setupDataChannel(channel, peerId) {
+            dataChannels.set(peerId, channel);
+
+            channel.onopen = () => {
+                displayStatus(`Connected to peer ${peerId}`);
+                knownPeers.add(peerId);
+                updatePeerList();
+                updateNetworkSize();
+                
+                // Share known peers
+                channel.send(JSON.stringify({
+                    type: 'peer-list',
+                    peers: Array.from(knownPeers)
+                }));
+
+                // After establishing P2P connections, we can close the discovery server connection
+                if (discoveryWs && dataChannels.size >= 2) {
+                    discoveryWs.close();
+                    discoveryWs = null;
+                }
+            };
+
+            channel.onclose = () => {
+                displayStatus(`Disconnected from peer ${peerId}`);
+                cleanupPeer(peerId);
+                updateNetworkSize();
+
+                // Try to reconnect through other peers
+                requestPeerConnection(peerId);
+            };
+
+            channel.onmessage = event => {
+                const message = JSON.parse(event.data);
+                
+                switch (message.type) {
+                    case 'chat':
+                        displayMessage(peerId, message.content);
+                        break;
+                        
+                    case 'peer-list':
+                        message.peers.forEach(newPeerId => {
+                            if (!knownPeers.has(newPeerId) && newPeerId !== userId) {
+                                knownPeers.add(newPeerId);
+                                requestPeerConnection(newPeerId);
+                            }
+                        });
+                        updatePeerList();
+                        break;
+                        
+                    case 'connection-request':
+                        handleConnectionRequest(message.peerId);
+                        break;
+                }
+            };
+        }
+
+        function requestPeerConnection(targetPeerId) {
+            if (!peers.has(targetPeerId)) {
+                dataChannels.forEach((channel) => {
+                    if (channel.readyState === 'open') {
+                        channel.send(JSON.stringify({
+                            type: 'connection-request',
+                            peerId: targetPeerId
+                        }));
+                    }
+                });
+            }
+        }
+
+        function handleConnectionRequest(targetPeerId) {
+            if (!peers.has(targetPeerId) && targetPeerId !== userId) {
+                initiatePeerConnection(targetPeerId);
+            }
+        }
+
+        function cleanupPeer(peerId) {
+            const peerConnection = peers.get(peerId);
+            if (peerConnection) {
+                peerConnection.close();
+                peers.delete(peerId);
+            }
+            dataChannels.delete(peerId);
+            updatePeerList();
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const content = messageInput.value.trim();
+            if (!content) return;
+
+            // Broadcast to all connected peers
+            dataChannels.forEach((channel) => {
+                if (channel.readyState === 'open') {
+                    channel.send(JSON.stringify({
+                        type: 'chat',
+                        content: content
+                    }));
+                }
+            });
+
+            displayMessage('You', content);
+            messageInput.value = '';
+        }
+
+        function displayMessage(sender, content) {
+            const messagesDiv = document.getElementById('messages');
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            const time = new Date().toLocaleTimeString();
+            messageElement.innerHTML = `<span class="message-time">[${time}]</span> <strong>${sender}:</strong> ${content}`;
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function displayStatus(message) {
+            const messagesDiv = document.getElementById('messages');
+            const statusElement = document.createElement('div');
+            statusElement.className = 'status';
+            statusElement.textContent = message;
+            messagesDiv.appendChild(statusElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function updatePeerList() {
+            const peerList = document.getElementById('peerList');
+            peerList.innerHTML = '';
+            
+            dataChannels.forEach((channel, peerId) => {
+                const peerDiv = document.createElement('div');
+                peerDiv.className = 'peer';
+                const isConnected = channel.readyState === 'open';
+                peerDiv.innerHTML = `
+                    <span class="${isConnected ? 'connected' : 'disconnected'}">●</span>
+                    ${peerId.substr(0, 8)}
+                `;
+                peerList.appendChild(peerDiv);
+            });
+
+            if (dataChannels.size === 0) {
+                peerList.innerHTML = '<div class="peer">No peers connected</div>';
+            }
+        }
+
+        function updateNetworkSize() {
+            document.getElementById('networkSize').textContent = dataChannels.size + 1;
+        }
+
+        function updateConnectionType(type) {
+            document.getElementById('connectionType').textContent = type;
+        }
+
+        document.getElementById('messageInput').addEventListener('keypress', event => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Start the application
+        initializeNetwork();
+    </script>
+</body>
+</html>

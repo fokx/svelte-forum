@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Serverless P2P Chat</title>
+    <style>
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        #messages {
+            height: 400px;
+            border: 1px solid #ccc;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+        #messageInput { width: 80%; padding: 5px; }
+        .peer-list {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+        .status { color: #666; font-style: italic; }
+        .message { margin: 5px 0; padding: 5px; border-radius: 4px; }
+        .peer { padding: 5px; margin: 2px 0; }
+        .connected { color: green; }
+        .disconnected { color: red; }
+        #joinCode {
+            font-family: monospace;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Serverless P2P Chat</h1>
+
+        <div id="initialization" class="peer-list">
+            <h3>Join Network</h3>
+            <div>
+                <p>To start a new chat network:</p>
+                <button onclick="initializeNetwork()">Create Network</button>
+            </div>
+            <div>
+                <p>To join existing network:</p>
+                <input type="text" id="peerCode" placeholder="Enter peer code">
+                <button onclick="joinNetwork()">Join Network</button>
+            </div>
+        </div>
+
+        <div id="joinCode" style="display: none;"></div>
+
+        <div class="peer-list">
+            <h3>Connected Peers</h3>
+            <div id="peerList"></div>
+        </div>
+
+        <div id="messages"></div>
+        <div id="input">
+            <input type="text" id="messageInput" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const peers = new Map(); // Map of peer connections
+        const dataChannels = new Map(); // Map of data channels
+        const knownPeers = new Set(); // Set of known peer IDs
+        let localPeerId = crypto.randomUUID();
+
+        const configuration = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+
+        // Initialize a new network
+        async function initializeNetwork() {
+            displayStatus('Created new network');
+            showJoinCode(await generateJoinCode());
+            document.getElementById('initialization').style.display = 'none';
+        }
+
+        // Join an existing network
+        async function joinNetwork() {
+            const peerCode = document.getElementById('peerCode').value;
+            if (!peerCode) return;
+
+            try {
+                const { peerId, ice, sdp } = JSON.parse(atob(peerCode));
+                await connectToPeer(peerId, sdp, ice);
+                document.getElementById('initialization').style.display = 'none';
+                displayStatus('Joining network...');
+            } catch (error) {
+                displayStatus('Invalid peer code');
+                console.error('Error joining network:', error);
+            }
+        }
+
+        // Generate a join code for others to connect
+        async function generateJoinCode() {
+            const peerConnection = new RTCPeerConnection(configuration);
+            const dataChannel = peerConnection.createDataChannel('discovery');
+
+            setupDataChannel(dataChannel, 'pending');
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            // Wait for ICE gathering to complete
+            await new Promise(resolve => {
+                if (peerConnection.iceGatheringState === 'complete') {
+                    resolve();
+                } else {
+                    peerConnection.addEventListener('icegatheringstatechange', () => {
+                        if (peerConnection.iceGatheringState === 'complete') {
+                            resolve();
+                        }
+                    });
+                }
+            });
+
+            const joinData = {
+                peerId: localPeerId,
+                sdp: peerConnection.localDescription,
+                ice: [...peerConnection.localDescription.sdp.matchAll(/a=candidate:.*\r\n/g)].map(m => m[0])
+            };
+
+            return btoa(JSON.stringify(joinData));
+        }
+
+        // Connect to a peer using their join code
+        async function connectToPeer(peerId, sdp, ice) {
+            if (peers.has(peerId) || peerId === localPeerId) return;
+
+            const peerConnection = new RTCPeerConnection(configuration);
+            peers.set(peerId, peerConnection);
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    // Store ICE candidate for answer generation
+                    ice.push(event.candidate);
+                }
+            };
+
+            peerConnection.ondatachannel = event => {
+                setupDataChannel(event.channel, peerId);
+            };
+
+            try {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+
+                // Show the answer code for manual exchange
+                const answerData = {
+                    peerId: localPeerId,
+                    sdp: peerConnection.localDescription,
+                    ice: ice
+                };
+                showJoinCode(btoa(JSON.stringify(answerData)));
+
+                // Exchange peer lists
+                broadcastPeerList();
+                updatePeerList();
+            } catch (error) {
+                console.error('Error connecting to peer:', error);
+                peers.delete(peerId);
+            }
+        }
+
+        function setupDataChannel(channel, peerId) {
+            dataChannels.set(peerId, channel);
+
+            channel.onopen = () => {
+                displayStatus(`Connected to peer ${peerId}`);
+                knownPeers.add(peerId);
+                updatePeerList();
+
+                // Share known peers
+                channel.send(JSON.stringify({
+                    type: 'peer-list',
+                    peers: Array.from(knownPeers)
+                }));
+            };
+
+            channel.onclose = () => {
+                displayStatus(`Disconnected from peer ${peerId}`);
+                cleanupPeer(peerId);
+            };
+
+            channel.onmessage = event => {
+                const message = JSON.parse(event.data);
+
+                switch (message.type) {
+                    case 'chat':
+                        displayMessage(peerId, message.content);
+                        break;
+
+                    case 'peer-list':
+                        // Add new peers to known peers
+                        message.peers.forEach(newPeerId => {
+                            if (!knownPeers.has(newPeerId) && newPeerId !== localPeerId) {
+                                knownPeers.add(newPeerId);
+                                // Try to connect to new peers
+                                requestPeerConnection(newPeerId);
+                            }
+                        });
+                        updatePeerList();
+                        break;
+
+                    case 'connection-request':
+                        handleConnectionRequest(message.peerId);
+                        break;
+                }
+            };
+        }
+
+        function requestPeerConnection(targetPeerId) {
+            dataChannels.forEach((channel, peerId) => {
+                if (channel.readyState === 'open') {
+                    channel.send(JSON.stringify({
+                        type: 'connection-request',
+                        peerId: targetPeerId
+                    }));
+                }
+            });
+        }
+
+        async function handleConnectionRequest(targetPeerId) {
+            if (!peers.has(targetPeerId) && targetPeerId !== localPeerId) {
+                const joinCode = await generateJoinCode();
+                broadcastMessage({
+                    type: 'connection-response',
+                    targetPeerId: targetPeerId,
+                    joinCode: joinCode
+                });
+            }
+        }
+
+        function cleanupPeer(peerId) {
+            const peerConnection = peers.get(peerId);
+            if (peerConnection) {
+                peerConnection.close();
+                peers.delete(peerId);
+            }
+            dataChannels.delete(peerId);
+            updatePeerList();
+        }
+
+        function broadcastPeerList() {
+            const peerList = Array.from(knownPeers);
+            broadcastMessage({
+                type: 'peer-list',
+                peers: peerList
+            });
+        }
+
+        function broadcastMessage(message) {
+            dataChannels.forEach((channel, peerId) => {
+                if (channel.readyState === 'open') {
+                    channel.send(JSON.stringify(message));
+                }
+            });
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const content = messageInput.value.trim();
+            if (!content) return;
+
+            broadcastMessage({
+                type: 'chat',
+                content: content
+            });
+
+            displayMessage('You', content);
+            messageInput.value = '';
+        }
+
+        function displayMessage(sender, content) {
+            const messagesDiv = document.getElementById('messages');
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            messageElement.innerHTML = `<strong>${sender}:</strong> ${content}`;
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function displayStatus(message) {
+            const messagesDiv = document.getElementById('messages');
+            const statusElement = document.createElement('div');
+            statusElement.className = 'status';
+            statusElement.textContent = message;
+            messagesDiv.appendChild(statusElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showJoinCode(code) {
+            const joinCodeDiv = document.getElementById('joinCode');
+            joinCodeDiv.style.display = 'block';
+            joinCodeDiv.innerHTML = `Share this code with others to join:<br>${code}`;
+        }
+
+        function updatePeerList() {
+            const peerList = document.getElementById('peerList');
+            peerList.innerHTML = '';
+
+            dataChannels.forEach((channel, peerId) => {
+                const peerDiv = document.createElement('div');
+                peerDiv.className = 'peer';
+                const isConnected = channel.readyState === 'open';
+                peerDiv.innerHTML = `
+                    <span class="${isConnected ? 'connected' : 'disconnected'}">●</span>
+                    ${peerId.substr(0, 8)}
+                `;
+                peerList.appendChild(peerDiv);
+            });
+
+            if (dataChannels.size === 0) {
+                peerList.innerHTML = '<div class="peer">No peers connected</div>';
+            }
+        }
+
+        document.getElementById('messageInput').addEventListener('keypress', event => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

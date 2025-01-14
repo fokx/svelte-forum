@@ -13,7 +13,7 @@
 			let main_post_arr = posts.filter(p => p.post_number === 1);
 			if (main_post_arr.length === 1) {
 				let main_post_id = main_post_arr[0].id;
-				console.log(main_post_id);
+				// console.log(main_post_id);
 				if (main_post_id !== undefined) {
 					goto(`/t/${main_post_id}`);
 				}

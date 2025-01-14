@@ -86,7 +86,6 @@
 
 <div class={scrollable_main_class} id="scrollable-element" bind:this={viewport}>
 	{#if $latest_topics && $latest_topics.length > 0}
-
 		<ul>
 			{#each $latest_topics as topic}
 				<div>

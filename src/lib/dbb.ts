@@ -26,5 +26,6 @@ dbb.version(2).stores({
 	categories: '&id, name, slug',
 	draft_cache: '&url',
 	cache: '++, api_username, api_key',
+	msgs: '&id, sender, receiver, msg, created_at',
 	rgv: '&name', // reactive global variables
 });

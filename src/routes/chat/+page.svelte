@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Skeleton } from 'svelte-5-ui-lib';
-	import { PUBLIC_WS_URL, PUBLIC_STUN_SERVER1, PUBLIC_STUN_SERVER2 } from '$env/static/public';
+	import { PUBLIC_STUN_SERVER1, PUBLIC_STUN_SERVER2, PUBLIC_WS_URL } from '$env/static/public';
 	import { siteTitle } from '$lib/stores';
-	import { liveQuery } from 'dexie';
-	import { dbb } from '$lib/dbb';
-	import { browser } from '$app/environment';
 	import type { PageData } from './$types';
+	import { GeneratePostId } from '$lib';
+	import { dbb } from '$lib/dbb';
 
 	let { data }: { data: PageData } = $props();
 	siteTitle.set('P2P Chat with Auto-Discovery');
@@ -21,12 +19,11 @@
 	let peerList: HTMLElement;
 	let messageInput: HTMLElement;
 
-	let userId = Math.random().toString(36).slice(2, 10);
-
+	// let userId = Math.random().toString(36).slice(2, 10);
+	const USER_ID_KEY_IN_LOCAL_STORAGE = 'chat-user-id-v1';
+	let userId = $state();
 	if (data.user && data.user.username !== 'guest') {
 		userId = data.user.username;
-	} else {
-		userId = `Guest-${userId}`;
 	}
 
 	function sendMessage() {
@@ -34,36 +31,52 @@
 		if (!message) return;
 
 		let sentToAnyPeer = false;
+		let to_send = { id: GeneratePostId(), sender: `user:${userId}`, receiver: 'channel:default', msg: message, created_at: new Date() };
+		let to_send_str = JSON.stringify(to_send);
 		dataChannels.forEach((channel, peerId) => {
 			if (channel.readyState === 'open') {
-				channel.send(message);
+				channel.send(to_send_str);
 				sentToAnyPeer = true;
 			}
 		});
 
 		if (sentToAnyPeer) {
-			displayMessage('You', message);
+			displayMessage(to_send);
+			storeMessage(to_send);
 			messageInput.value = '';
 		} else {
 			displayStatus('No connected peers to send message to');
 		}
 	}
 
-	function displayMessage(sender, message) {
+	function storeMessage(obj) {
+		// const messages = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [];
+		// messages.push({ user_id, message });
+		// localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(messages));
+		console.log('to store msg',obj);
+		dbb.msgs.add(obj);
+	}
+	function displayStoredMessages() {
+		dbb.msgs.orderBy('created_at').filter(t => t.receiver === 'channel:default').each(msg => {
+			displayMessage(msg);
+		});
+	}
+	function displayMessage(obj) {
 		const messageElement = document.createElement('div');
 		messageElement.className = 'message';
-
-		const time = new Date().toLocaleTimeString();
+		let display_sender = obj.sender === `user:${userId}` ? 'You' : obj.sender;
 		messageElement.innerHTML = `
-                <span class="text-gray-500 text-sm">[${time}]</span>
-                <strong>${sender}:</strong> ${message}
+                <span class="text-gray-500 text-sm">[${obj.created_at}]</span>
+                <strong>${display_sender}:</strong> ${obj.msg}
             `;
 
 		messagesDiv.appendChild(messageElement);
 		messagesDiv.scrollTop = messagesDiv.scrollHeight;
+		console.log('displayed message:', obj);
 	}
 
 	function displayStatus(message) {
+		if (!messagesDiv) return;
 		const statusElement = document.createElement('div');
 		statusElement.className = 'status text-gray-600 italic';
 		statusElement.textContent = message;
@@ -264,7 +277,9 @@
 		};
 
 		channel.onmessage = event => {
-			displayMessage(peerId, event.data);
+			let data_recv = JSON.parse(event.data);
+			displayMessage(data_recv);
+			storeMessage(data_recv);
 		};
 	}
 
@@ -284,6 +299,7 @@
 	}
 
 	function updatePeerList() {
+		if (!peerList) return;
 		peerList.innerHTML = '';
 
 		connections.forEach((connection, peerId) => {
@@ -303,12 +319,21 @@
 	}
 
 	onMount(() => {
+	if (!userId) {
+			userId = localStorage.getItem(USER_ID_KEY_IN_LOCAL_STORAGE);
+			if (!userId) {
+				userId = Math.random().toString(36).slice(2, 10);
+				userId = `Guest-${userId}`;
+				localStorage.setItem(USER_ID_KEY_IN_LOCAL_STORAGE, userId);
+			}
+		}
 		messageInput.addEventListener('keypress', event => {
 			if (event.key === 'Enter') {
 				sendMessage();
 			}
 		});
 		connectToSignalingServer();
+		displayStoredMessages();
 	});
 </script>
 
@@ -316,13 +341,13 @@
 	<div class="bg-secondary-100 dark:bg-primary-950 p-3 mb-2 rounded">
 		Your ID: <strong>{userId}</strong>
 	</div>
-	<div class="  max-h-40 bg-gray-100 dark:bg-gray-900 p-3 mb-2 rounded overflow-y-auto">
-		<h3 class=" font-semibold mb-2">Active Peers</h3>
+	<div class="max-h-40 bg-gray-100 dark:bg-gray-900 p-3 mb-2 rounded overflow-y-auto">
+		<h3 class="font-semibold mb-2">Active Peers</h3>
 		<div bind:this={peerList}></div>
 	</div>
-	<h3 class=" font-semibold mb-2">Messages</h3>
+	<h3 class="font-semibold mb-2">Messages</h3>
 	<div bind:this={messagesDiv} class="min-h-32 max-h-64 border border-gray-300 overflow-y-auto mb-3 p-3"></div>
-	<div class="fixed w-full mb-1 mt-auto">
+	<div class="w-full mb-1 mt-auto">
 		<input type="text" bind:this={messageInput} placeholder="Type a message..." class="flex-grow p-2 border
 		border-gray-300 rounded-l dark:bg-gray-800">
 		<button onclick={sendMessage} class="p-2 bg-secondary-200 dark:bg-secondary-800 rounded-r">Send</button>
@@ -330,15 +355,21 @@
 </div>
 
 <style>
-		:global {
+    :global {
         .message:nth-child(odd) {
             background: #f9f9f9;
         }
+
         .dark {
             .message:nth-child(odd) {
                 background: #272e39;
             }
         }
-        .message { margin: 5px 0; padding: 5px; border-radius: 4px; }
-		}
+
+        .message {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+    }
 </style>

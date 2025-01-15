@@ -5,6 +5,7 @@
 	import type { PageData } from './$types';
 	import { GeneratePostId } from '$lib';
 	import { dbb } from '$lib/dbb';
+	import { liveQuery } from 'dexie';
 
 	let { data }: { data: PageData } = $props();
 	siteTitle.set('P2P Chat with Auto-Discovery');
@@ -31,7 +32,13 @@
 		if (!message) return;
 
 		let sentToAnyPeer = false;
-		let to_send = { id: GeneratePostId(), sender: `user:${userId}`, receiver: 'channel:default', msg: message, created_at: new Date() };
+		let to_send = {
+			id: GeneratePostId(),
+			sender: `user:${userId}`,
+			receiver: 'channel:default',
+			msg: message,
+			created_at: Date.now()
+		};
 		let to_send_str = JSON.stringify(to_send);
 		dataChannels.forEach((channel, peerId) => {
 			if (channel.readyState === 'open') {
@@ -53,20 +60,27 @@
 		// const messages = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [];
 		// messages.push({ user_id, message });
 		// localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(messages));
-		console.log('to store msg',obj);
+		console.log('to store msg', obj);
 		dbb.msgs.add(obj);
 	}
+
+	// let msgs = liveQuery(() =>
+	// 	dbb.msgs.orderBy('created_at').filter(t => t.receiver === 'channel:default').toArray()
+	// );
+	// let msgs = [];
+
 	function displayStoredMessages() {
 		dbb.msgs.orderBy('created_at').filter(t => t.receiver === 'channel:default').each(msg => {
 			displayMessage(msg);
 		});
 	}
+
 	function displayMessage(obj) {
 		const messageElement = document.createElement('div');
 		messageElement.className = 'message';
 		let display_sender = obj.sender === `user:${userId}` ? 'You' : obj.sender;
 		messageElement.innerHTML = `
-                <span class="text-gray-500 text-sm">[${obj.created_at}]</span>
+                <span class="text-gray-500 text-sm">${new Date(obj.created_at).toLocaleString()}</span>
                 <strong>${display_sender}:</strong> ${obj.msg}
             `;
 
@@ -319,7 +333,7 @@
 	}
 
 	onMount(() => {
-	if (!userId) {
+		if (!userId) {
 			userId = localStorage.getItem(USER_ID_KEY_IN_LOCAL_STORAGE);
 			if (!userId) {
 				userId = Math.random().toString(36).slice(2, 10);
@@ -332,8 +346,8 @@
 				sendMessage();
 			}
 		});
-		connectToSignalingServer();
 		displayStoredMessages();
+		connectToSignalingServer();
 	});
 </script>
 
@@ -346,7 +360,15 @@
 		<div bind:this={peerList}></div>
 	</div>
 	<h3 class="font-semibold mb-2">Messages</h3>
-	<div bind:this={messagesDiv} class="min-h-32 max-h-64 border border-gray-300 overflow-y-auto mb-3 p-3"></div>
+	<div bind:this={messagesDiv} class="min-h-32 max-h-64 border border-gray-300 overflow-y-auto mb-3 p-3">
+		<!--{#each $msgs as msg}-->
+		<!--	<div class="message">-->
+		<!--		<span class="text-gray-500 text-sm">{new Date(msg.created_at).toLocaleString()}</span>-->
+		<!--		<strong>{msg.sender === `user:${userId}` ? 'You' : msg.sender}</strong>-->
+		<!--		{msg.msg}-->
+		<!--	</div>-->
+		<!--{/each}-->
+	</div>
 	<div class="w-full mb-1 mt-auto">
 		<input type="text" bind:this={messageInput} placeholder="Type a message..." class="flex-grow p-2 border
 		border-gray-300 rounded-l dark:bg-gray-800">

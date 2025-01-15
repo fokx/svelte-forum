@@ -6,6 +6,9 @@
 	import { liveQuery } from 'dexie';
 	import { dbb } from '$lib/dbb';
 	import { browser } from '$app/environment';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 	siteTitle.set('P2P Chat with Auto-Discovery');
 
 	let ws;
@@ -17,6 +20,14 @@
 	let messagesDiv: HTMLElement;
 	let peerList: HTMLElement;
 	let messageInput: HTMLElement;
+
+	let userId = Math.random().toString(36).slice(2, 10);
+
+	if (data.user && data.user.username !== 'guest') {
+		userId = data.user.username;
+	} else {
+		userId = `Guest-${userId}`;
+	}
 
 	function sendMessage() {
 		const message = messageInput.value.trim();
@@ -60,241 +71,238 @@
 		messagesDiv.scrollTop = messagesDiv.scrollHeight;
 	}
 
-	onMount(() => {
-		const userId = Math.random().toString(36).slice(2, 11);
-		local_id.textContent = userId;
+	const rtc_peer_conn_config = {
+		iceServers: [
+			{ urls: `stun:${PUBLIC_STUN_SERVER1}` },
+			{ urls: `stun:${PUBLIC_STUN_SERVER2}` },
+			{ urls: 'stun:stun.cloudflare.com:3478' },
+			{ urls: 'stun:stun.l.google.com:19302' }
+		]
+	};
 
-		const configuration = {
-			iceServers: [
-				{ urls: `stun:${PUBLIC_STUN_SERVER1}` },
-				{ urls: `stun:${PUBLIC_STUN_SERVER2}` },
-				{ urls: 'stun:stun.cloudflare.com:3478' },
-				{ urls: 'stun:stun.l.google.com:19302' }
-			]
+	function connectToSignalingServer() {
+		ws = new WebSocket(PUBLIC_WS_URL);
+
+		ws.onopen = () => {
+			displayStatus('Connected to signaling server');
+			ws.send(JSON.stringify({
+				type: 'register',
+				userId: userId
+			}));
 		};
 
-		function connectToSignalingServer() {
-			ws = new WebSocket(PUBLIC_WS_URL);
+		ws.onmessage = async (event) => {
+			const message = JSON.parse(event.data);
 
-			ws.onopen = () => {
-				displayStatus('Connected to signaling server');
-				ws.send(JSON.stringify({
-					type: 'register',
-					userId: userId
-				}));
-			};
-
-			ws.onmessage = async (event) => {
-				const message = JSON.parse(event.data);
-
-				switch (message.type) {
-					case 'peers':
-						// Connect to all existing peers
-						for (const peerId of message.peers) {
-							if (!connections.has(peerId)) {
-								await initiatePeerConnection(peerId);
-							}
+			switch (message.type) {
+				case 'peers':
+					// Connect to all existing peers
+					for (const peerId of message.peers) {
+						if (!connections.has(peerId)) {
+							await initiatePeerConnection(peerId);
 						}
-						break;
+					}
+					break;
 
-					case 'peer-joined':
-						displayStatus(`Peer ${message.userId} joined`);
-						break;
+				case 'peer-joined':
+					displayStatus(`Peer ${message.userId} joined`);
+					break;
 
-					case 'peer-left':
-						displayStatus(`Peer ${message.userId} left`);
-						cleanupPeerConnection(message.userId);
-						updatePeerList();
-						break;
+				case 'peer-left':
+					displayStatus(`Peer ${message.userId} left`);
+					cleanupPeerConnection(message.userId);
+					updatePeerList();
+					break;
 
-					case 'offer':
-						await handleOffer(message);
-						break;
+				case 'offer':
+					await handleOffer(message);
+					break;
 
-					case 'answer':
-						await handleAnswer(message);
-						// Process any pending candidates
-						const candidates = pendingCandidates.get(message.from) || [];
-						for (const candidate of candidates) {
-							await handleIceCandidate({ from: message.from, data: candidate });
+				case 'answer':
+					await handleAnswer(message);
+					// Process any pending candidates
+					const candidates = pendingCandidates.get(message.from) || [];
+					for (const candidate of candidates) {
+						await handleIceCandidate({ from: message.from, data: candidate });
+					}
+					pendingCandidates.delete(message.from);
+					break;
+
+				case 'ice-candidate':
+					const peerConnection = connections.get(message.from);
+					if (peerConnection?.remoteDescription) {
+						await handleIceCandidate(message);
+					} else {
+						// Store candidate for later
+						if (!pendingCandidates.has(message.from)) {
+							pendingCandidates.set(message.from, []);
 						}
-						pendingCandidates.delete(message.from);
-						break;
-
-					case 'ice-candidate':
-						const peerConnection = connections.get(message.from);
-						if (peerConnection?.remoteDescription) {
-							await handleIceCandidate(message);
-						} else {
-							// Store candidate for later
-							if (!pendingCandidates.has(message.from)) {
-								pendingCandidates.set(message.from, []);
-							}
-							pendingCandidates.get(message.from).push(message.data);
-						}
-						break;
-				}
-			};
-
-			ws.onclose = () => {
-				displayStatus('Disconnected from signaling server. Retrying in 5 seconds...');
-				setTimeout(connectToSignalingServer, 5000);
-			};
-		}
-
-		async function initiatePeerConnection(peerId) {
-			console.log(`Initiating connection to peer ${peerId}`);
-			const peerConnection = new RTCPeerConnection(configuration);
-			connections.set(peerId, peerConnection);
-
-			const dataChannel = peerConnection.createDataChannel('chat');
-			setupDataChannel(dataChannel, peerId);
-
-			peerConnection.onicecandidate = (event) => {
-				if (event.candidate) {
-					ws.send(JSON.stringify({
-						type: 'ice-candidate',
-						target: peerId,
-						data: event.candidate
-					}));
-				}
-			};
-
-			peerConnection.oniceconnectionstatechange = () => {
-				console.log(`ICE connection state with ${peerId}: ${peerConnection.iceConnectionState}`);
-				updatePeerList();
-			};
-
-			try {
-				const offer = await peerConnection.createOffer();
-				await peerConnection.setLocalDescription(offer);
-				ws.send(JSON.stringify({
-					type: 'offer',
-					target: peerId,
-					data: offer
-				}));
-			} catch (error) {
-				console.error('Error creating offer:', error);
-				cleanupPeerConnection(peerId);
+						pendingCandidates.get(message.from).push(message.data);
+					}
+					break;
 			}
+		};
+
+		ws.onclose = () => {
+			displayStatus('Disconnected from signaling server. Retrying in 5 seconds...');
+			setTimeout(connectToSignalingServer, 5000);
+		};
+	}
+
+	async function initiatePeerConnection(peerId) {
+		console.log(`Initiating connection to peer ${peerId}`);
+		const peerConnection = new RTCPeerConnection(rtc_peer_conn_config);
+		connections.set(peerId, peerConnection);
+
+		const dataChannel = peerConnection.createDataChannel('chat');
+		setupDataChannel(dataChannel, peerId);
+
+		peerConnection.onicecandidate = (event) => {
+			if (event.candidate) {
+				ws.send(JSON.stringify({
+					type: 'ice-candidate',
+					target: peerId,
+					data: event.candidate
+				}));
+			}
+		};
+
+		peerConnection.oniceconnectionstatechange = () => {
+			console.log(`ICE connection state with ${peerId}: ${peerConnection.iceConnectionState}`);
+			updatePeerList();
+		};
+
+		try {
+			const offer = await peerConnection.createOffer();
+			await peerConnection.setLocalDescription(offer);
+			ws.send(JSON.stringify({
+				type: 'offer',
+				target: peerId,
+				data: offer
+			}));
+		} catch (error) {
+			console.error('Error creating offer:', error);
+			cleanupPeerConnection(peerId);
 		}
+	}
 
-		async function handleOffer(message) {
-			console.log(`Handling offer from peer ${message.from}`);
-			const peerConnection = new RTCPeerConnection(configuration);
-			connections.set(message.from, peerConnection);
+	async function handleOffer(message) {
+		console.log(`Handling offer from peer ${message.from}`);
+		const peerConnection = new RTCPeerConnection(rtc_peer_conn_config);
+		connections.set(message.from, peerConnection);
 
-			peerConnection.ondatachannel = (event) => {
-				setupDataChannel(event.channel, message.from);
-			};
+		peerConnection.ondatachannel = (event) => {
+			setupDataChannel(event.channel, message.from);
+		};
 
-			peerConnection.onicecandidate = (event) => {
-				if (event.candidate) {
-					ws.send(JSON.stringify({
-						type: 'ice-candidate',
-						target: message.from,
-						data: event.candidate
-					}));
-				}
-			};
+		peerConnection.onicecandidate = (event) => {
+			if (event.candidate) {
+				ws.send(JSON.stringify({
+					type: 'ice-candidate',
+					target: message.from,
+					data: event.candidate
+				}));
+			}
+		};
 
-			peerConnection.oniceconnectionstatechange = () => {
-				console.log(`ICE connection state with ${message.from}: ${peerConnection.iceConnectionState}`);
-				updatePeerList();
-			};
+		peerConnection.oniceconnectionstatechange = () => {
+			console.log(`ICE connection state with ${message.from}: ${peerConnection.iceConnectionState}`);
+			updatePeerList();
+		};
 
+		try {
+			await peerConnection.setRemoteDescription(new RTCSessionDescription(message.data));
+			const answer = await peerConnection.createAnswer();
+			await peerConnection.setLocalDescription(answer);
+			ws.send(JSON.stringify({
+				type: 'answer',
+				target: message.from,
+				data: answer
+			}));
+		} catch (error) {
+			console.error('Error handling offer:', error);
+			cleanupPeerConnection(message.from);
+		}
+	}
+
+	async function handleAnswer(message) {
+		console.log(`Handling answer from peer ${message.from}`);
+		const peerConnection = connections.get(message.from);
+		if (peerConnection) {
 			try {
 				await peerConnection.setRemoteDescription(new RTCSessionDescription(message.data));
-				const answer = await peerConnection.createAnswer();
-				await peerConnection.setLocalDescription(answer);
-				ws.send(JSON.stringify({
-					type: 'answer',
-					target: message.from,
-					data: answer
-				}));
 			} catch (error) {
-				console.error('Error handling offer:', error);
+				console.error('Error handling answer:', error);
 				cleanupPeerConnection(message.from);
 			}
 		}
+	}
 
-		async function handleAnswer(message) {
-			console.log(`Handling answer from peer ${message.from}`);
-			const peerConnection = connections.get(message.from);
-			if (peerConnection) {
-				try {
-					await peerConnection.setRemoteDescription(new RTCSessionDescription(message.data));
-				} catch (error) {
-					console.error('Error handling answer:', error);
-					cleanupPeerConnection(message.from);
-				}
+	async function handleIceCandidate(message) {
+		const peerConnection = connections.get(message.from);
+		if (peerConnection) {
+			try {
+				await peerConnection.addIceCandidate(new RTCIceCandidate(message.data));
+			} catch (error) {
+				console.error('Error handling ICE candidate:', error);
 			}
 		}
+	}
 
-		async function handleIceCandidate(message) {
-			const peerConnection = connections.get(message.from);
-			if (peerConnection) {
-				try {
-					await peerConnection.addIceCandidate(new RTCIceCandidate(message.data));
-				} catch (error) {
-					console.error('Error handling ICE candidate:', error);
-				}
-			}
-		}
+	function setupDataChannel(channel, peerId) {
+		dataChannels.set(peerId, channel);
 
-		function setupDataChannel(channel, peerId) {
-			dataChannels.set(peerId, channel);
-
-			channel.onopen = () => {
-				displayStatus(`Connected to peer ${peerId}`);
-				updatePeerList();
-			};
-
-			channel.onclose = () => {
-				displayStatus(`Disconnected from peer ${peerId}`);
-				cleanupPeerConnection(peerId);
-				updatePeerList();
-			};
-
-			channel.onmessage = event => {
-				displayMessage(peerId, event.data);
-			};
-		}
-
-		function cleanupPeerConnection(peerId) {
-			console.log(`Cleaning up connection with peer ${peerId}`);
-			const connection = connections.get(peerId);
-			if (connection) {
-				connection.close();
-				connections.delete(peerId);
-			}
-			const channel = dataChannels.get(peerId);
-			if (channel) {
-				channel.close();
-				dataChannels.delete(peerId);
-			}
+		channel.onopen = () => {
+			displayStatus(`Connected to peer ${peerId}`);
 			updatePeerList();
+		};
+
+		channel.onclose = () => {
+			displayStatus(`Disconnected from peer ${peerId}`);
+			cleanupPeerConnection(peerId);
+			updatePeerList();
+		};
+
+		channel.onmessage = event => {
+			displayMessage(peerId, event.data);
+		};
+	}
+
+	function cleanupPeerConnection(peerId) {
+		console.log(`Cleaning up connection with peer ${peerId}`);
+		const connection = connections.get(peerId);
+		if (connection) {
+			connection.close();
+			connections.delete(peerId);
 		}
+		const channel = dataChannels.get(peerId);
+		if (channel) {
+			channel.close();
+			dataChannels.delete(peerId);
+		}
+		updatePeerList();
+	}
 
-		function updatePeerList() {
-			peerList.innerHTML = '';
+	function updatePeerList() {
+		peerList.innerHTML = '';
 
-			connections.forEach((connection, peerId) => {
-				const peerDiv = document.createElement('div');
-				peerDiv.className = 'peer flex items-center mb-2';
-				const isConnected = connection.iceConnectionState === 'connected';
-				peerDiv.innerHTML = `
+		connections.forEach((connection, peerId) => {
+			const peerDiv = document.createElement('div');
+			peerDiv.className = 'peer flex items-center mb-2';
+			const isConnected = connection.iceConnectionState === 'connected';
+			peerDiv.innerHTML = `
                     <span class="${isConnected ? 'connected text-green-500' : 'disconnected text-red-500'}">●</span>
                     ${peerId} (${connection.iceConnectionState})
                 `;
-				peerList.appendChild(peerDiv);
-			});
+			peerList.appendChild(peerDiv);
+		});
 
-			if (connections.size === 0) {
-				peerList.innerHTML = '<div class="p-1 my-0.5">No peers connected</div>';
-			}
+		if (connections.size === 0) {
+			peerList.innerHTML = '<div class="p-1 my-0.5">No peers connected</div>';
 		}
+	}
 
+	onMount(() => {
 		messageInput.addEventListener('keypress', event => {
 			if (event.key === 'Enter') {
 				sendMessage();
@@ -306,7 +314,7 @@
 
 <div class="max-w-2xl mx-auto my-0.5 p-5">
 	<div class="bg-secondary-100 dark:bg-primary-950 p-3 mb-2 rounded">
-		Your ID: <strong id="localId" bind:this={local_id}></strong>
+		Your ID: <strong>{userId}</strong>
 	</div>
 	<div class="  max-h-40 bg-gray-100 dark:bg-gray-900 p-3 mb-2 rounded overflow-y-auto">
 		<h3 class=" font-semibold mb-2">Active Peers</h3>

@@ -13,8 +13,12 @@
 	const dataChannels = new Map();
 	let pendingCandidates = new Map();
 
+	let local_id: HTMLElement;
+	let messagesDiv: HTMLElement;
+	let peerList: HTMLElement;
+	let messageInput: HTMLElement;
+
 	function sendMessage() {
-		const messageInput = document.getElementById('messageInput');
 		const message = messageInput.value.trim();
 		if (!message) return;
 
@@ -35,7 +39,6 @@
 	}
 
 	function displayMessage(sender, message) {
-		const messagesDiv = document.getElementById('messages');
 		const messageElement = document.createElement('div');
 		messageElement.className = 'message';
 
@@ -50,7 +53,6 @@
 	}
 
 	function displayStatus(message) {
-		const messagesDiv = document.getElementById('messages');
 		const statusElement = document.createElement('div');
 		statusElement.className = 'status text-gray-600 italic';
 		statusElement.textContent = message;
@@ -60,7 +62,7 @@
 
 	onMount(() => {
 		const userId = Math.random().toString(36).slice(2, 11);
-		document.getElementById('localId').textContent = userId;
+		local_id.textContent = userId;
 
 		const configuration = {
 			iceServers: [
@@ -275,7 +277,6 @@
 		}
 
 		function updatePeerList() {
-			const peerList = document.getElementById('peerList');
 			peerList.innerHTML = '';
 
 			connections.forEach((connection, peerId) => {
@@ -294,7 +295,7 @@
 			}
 		}
 
-		document.getElementById('messageInput').addEventListener('keypress', event => {
+		messageInput.addEventListener('keypress', event => {
 			if (event.key === 'Enter') {
 				sendMessage();
 			}
@@ -305,16 +306,16 @@
 
 <div class="max-w-2xl mx-auto my-0.5 p-5">
 	<div class="bg-secondary-100 dark:bg-primary-950 p-3 mb-2 rounded">
-		Your ID: <strong id="localId"></strong>
+		Your ID: <strong id="localId" bind:this={local_id}></strong>
 	</div>
 	<div class="  max-h-40 bg-gray-100 dark:bg-gray-900 p-3 mb-2 rounded overflow-y-auto">
 		<h3 class=" font-semibold mb-2">Active Peers</h3>
-		<div id="peerList"></div>
+		<div bind:this={peerList}></div>
 	</div>
 	<h3 class=" font-semibold mb-2">Messages</h3>
-	<div id="messages" class="min-h-32 max-h-64 border border-gray-300 overflow-y-auto mb-3 p-3"></div>
-	<div id="input" class="fixed w-full mb-1 mt-auto">
-		<input type="text" id="messageInput" placeholder="Type a message..." class="flex-grow p-2 border
+	<div bind:this={messagesDiv} class="min-h-32 max-h-64 border border-gray-300 overflow-y-auto mb-3 p-3"></div>
+	<div class="fixed w-full mb-1 mt-auto">
+		<input type="text" bind:this={messageInput} placeholder="Type a message..." class="flex-grow p-2 border
 		border-gray-300 rounded-l dark:bg-gray-800">
 		<button onclick={sendMessage} class="p-2 bg-secondary-200 dark:bg-secondary-800 rounded-r">Send</button>
 	</div>

@@ -6,6 +6,7 @@
 	import { GeneratePostId } from '$lib';
 	import { dbb } from '$lib/dbb';
 	import { liveQuery } from 'dexie';
+	import { browser } from '$app/environment';
 
 	let { data }: { data: PageData } = $props();
 	siteTitle.set('P2P Chat with Auto-Discovery');
@@ -333,21 +334,30 @@
 	}
 
 	onMount(() => {
-		if (!userId) {
-			userId = localStorage.getItem(USER_ID_KEY_IN_LOCAL_STORAGE);
+
+		if (browser) {
+			// if( !( navigator.getUserMedia || navigator.webkitGetUserMedia ||
+			// 	 navigator.msGetUserMedia) ) {
+			if (window.RTCPeerConnection === undefined) {
+				alert("Chat requires WebRTC, which is not supported by your browser.");
+				return
+			}
 			if (!userId) {
-				userId = Math.random().toString(36).slice(2, 10);
-				userId = `Guest-${userId}`;
-				localStorage.setItem(USER_ID_KEY_IN_LOCAL_STORAGE, userId);
+				userId = localStorage.getItem(USER_ID_KEY_IN_LOCAL_STORAGE);
+				if (!userId) {
+					userId = Math.random().toString(36).slice(2, 10);
+					userId = `Guest-${userId}`;
+					localStorage.setItem(USER_ID_KEY_IN_LOCAL_STORAGE, userId);
+				}
 			}
+			messageInput.addEventListener('keypress', event => {
+				if (event.key === 'Enter') {
+					sendMessage();
+				}
+			});
+			displayStoredMessages();
+			connectToSignalingServer();
 		}
-		messageInput.addEventListener('keypress', event => {
-			if (event.key === 'Enter') {
-				sendMessage();
-			}
-		});
-		displayStoredMessages();
-		connectToSignalingServer();
 	});
 </script>
 

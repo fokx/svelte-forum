@@ -70,6 +70,8 @@ let stunServers: string[] = [
 
 ];
 
+// https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/
+// https://github.com/heiher/natmap/issues/18
 // avaialbe in CN with 1500 timeout
 let stuntxt = `
 stun.hitv.com:3478

@@ -30,7 +30,11 @@
 	if (data.user && data.user.username !== 'guest') {
 		userId = data.user.username;
 	}
-
+	function shareMessagesWithPeer(peerId: string) {
+		dbb.msgs.orderBy('created_at').filter(m => m.type === 'message').toArray().then(_msgs => {
+			dataChannels.get(peerId)?.send(JSON.stringify({ type: 'message-array', data: _msgs }))
+		});
+	}
 	function sendMessage() {
 		const message = messageInput.value.trim();
 		if (!message) return;
@@ -44,10 +48,9 @@
 			created_at: Date.now(),
 			type: 'message'
 		};
-		let to_send_str = JSON.stringify(to_send);
 		dataChannels.forEach((channel, peerId) => {
 			if (channel.readyState === 'open') {
-				channel.send(to_send_str);
+				channel.send(JSON.stringify({type: 'message', data: to_send}));
 				sentToAnyPeer = true;
 			}
 		});
@@ -66,7 +69,8 @@
 		// const messages = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [];
 		// messages.push({ user_id, message });
 		// localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(messages));
-		console.log('to store msg', obj);
+		// console.log('to store msg', obj);
+		// console.log('to store msg', typeof obj);
 		dbb.msgs.add(obj);
 	}
 
@@ -213,7 +217,7 @@
 		};
 
 		peerConnection.oniceconnectionstatechange = () => {
-			console.log(`ICE connection state with ${peerId}: ${peerConnection.iceConnectionState}`);
+			console.log(`initiatePeerConnection: ICE connection state with ${peerId}: ${peerConnection.iceConnectionState}`);
 			updatePeerList();
 		};
 
@@ -251,7 +255,7 @@
 		};
 
 		peerConnection.oniceconnectionstatechange = () => {
-			console.log(`ICE connection state with ${message.from}: ${peerConnection.iceConnectionState}`);
+			console.log(`handleOffer: ICE connection state with ${message.from}: ${peerConnection.iceConnectionState}`);
 			updatePeerList();
 		};
 
@@ -299,6 +303,7 @@
 
 		channel.onopen = () => {
 			storeStatus(`Connected to peer ${peerId}`);
+			shareMessagesWithPeer(peerId);
 			updatePeerList();
 		};
 
@@ -310,8 +315,15 @@
 
 		channel.onmessage = event => {
 			let data_recv = JSON.parse(event.data);
-			// displayMessage(data_recv);
-			storeMessage(data_recv);
+			if (data_recv.type === 'message-array') {
+				// console.log('bulkPut', data_recv.data);
+				dbb.msgs.bulkPut(data_recv.data); // TODO security flaw: what if user forges data?
+			} else if (data_recv.type === 'message') {
+				// console.log('add', data_recv.data);
+				dbb.msgs.put(data_recv.data);
+			} else {
+				console.warn('Unknown data received:', data_recv);
+			}
 		};
 	}
 

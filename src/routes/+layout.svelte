@@ -348,18 +348,17 @@
 	<!--        <BottomNavHeaderItem itemName="Following"/>-->
 	<!--    </BottomNavHeader>-->
 	<!--{/snippet}-->
-	<BottomNavItem btnName="Under Construction" href={githubURL}>
-		<!--		<span class="text-gray-900 dark:text-white">🚧</span>-->
-		<Github class={BottomNavItemClass} />
-	</BottomNavItem>
 	<BottomNavItem btnName="West" href={westUrl}>
 		<ChevronLeft class={BottomNavItemClass} />
 	</BottomNavItem>
+	<BottomNavItem btnName="Chat" href="/chat">
+		<ChatDots class={BottomNavItemClass} />
+	</BottomNavItem>
+	<BottomNavItem btnName="Home" href="/">
+		<HouseDoorFill class={BottomNavItemClass} />
+	</BottomNavItem>
 	<BottomNavItem btnName="New post" href="/compose">
 		<Plus class={BottomNavItemClass} />
-	</BottomNavItem>
-	<BottomNavItem btnName="East" href="/">
-		<HouseDoorFill class={BottomNavItemClass} />
 	</BottomNavItem>
 	<BottomNavItem btnName="Settings" href="/settings">
 		<Sliders2Vertical class={BottomNavItemClass} />

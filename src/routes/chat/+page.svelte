@@ -38,7 +38,8 @@
 			sender: `user:${userId}`,
 			receiver: 'channel:default',
 			msg: message,
-			created_at: Date.now()
+			created_at: Date.now(),
+			type: 'message'
 		};
 		let to_send_str = JSON.stringify(to_send);
 		dataChannels.forEach((channel, peerId) => {
@@ -49,11 +50,11 @@
 		});
 
 		if (sentToAnyPeer) {
-			displayMessage(to_send);
+			// displayMessage(to_send);
 			storeMessage(to_send);
 			messageInput.value = '';
 		} else {
-			displayStatus('No connected peers to send message to');
+			storeStatus('No connected peers to send message to');
 		}
 	}
 
@@ -65,15 +66,16 @@
 		dbb.msgs.add(obj);
 	}
 
-	// let msgs = liveQuery(() =>
-	// 	dbb.msgs.orderBy('created_at').filter(t => t.receiver === 'channel:default').toArray()
-	// );
+	let msgs = liveQuery(() =>
+		dbb.msgs.orderBy('created_at').toArray()
+		// dbb.msgs.orderBy('created_at').filter(t => t.receiver === 'channel:default').toArray()
+	);
 	// let msgs = [];
 
 	function displayStoredMessages() {
-		dbb.msgs.orderBy('created_at').filter(t => t.receiver === 'channel:default').each(msg => {
-			displayMessage(msg);
-		});
+		// dbb.msgs.orderBy('created_at').filter(t => t.receiver === 'channel:default').each(msg => {
+		// 	displayMessage(msg);
+		// });
 	}
 
 	function displayMessage(obj) {
@@ -90,8 +92,18 @@
 		console.log('displayed message:', obj);
 	}
 
-	function displayStatus(message) {
+	function storeStatus(message) {
+		let status_to_store = {
+			id: GeneratePostId(),
+			sender: `user:${userId}`,
+			receiver: 'channel:default',
+			msg: message,
+			created_at: Date.now(),
+			type: 'status'
+		};
+		dbb.msgs.add(status_to_store);
 		if (!messagesDiv) return;
+		return
 		const statusElement = document.createElement('div');
 		statusElement.className = 'status text-gray-600 italic';
 		statusElement.textContent = message;
@@ -112,7 +124,7 @@
 		ws = new WebSocket(PUBLIC_WS_URL);
 
 		ws.onopen = () => {
-			displayStatus('Connected to signaling server');
+			storeStatus('Connected to signaling server');
 			ws.send(JSON.stringify({
 				type: 'register',
 				userId: userId
@@ -133,11 +145,11 @@
 					break;
 
 				case 'peer-joined':
-					displayStatus(`Peer ${message.userId} joined`);
+					storeStatus(`Peer ${message.userId} joined`);
 					break;
 
 				case 'peer-left':
-					displayStatus(`Peer ${message.userId} left`);
+					storeStatus(`Peer ${message.userId} left`);
 					cleanupPeerConnection(message.userId);
 					updatePeerList();
 					break;
@@ -172,7 +184,7 @@
 		};
 
 		ws.onclose = () => {
-			displayStatus('Disconnected from signaling server. Retrying in 5 seconds...');
+			storeStatus('Disconnected from signaling server. Retrying in 5 seconds...');
 			setTimeout(connectToSignalingServer, 5000);
 		};
 	}
@@ -281,19 +293,19 @@
 		dataChannels.set(peerId, channel);
 
 		channel.onopen = () => {
-			displayStatus(`Connected to peer ${peerId}`);
+			storeStatus(`Connected to peer ${peerId}`);
 			updatePeerList();
 		};
 
 		channel.onclose = () => {
-			displayStatus(`Disconnected from peer ${peerId}`);
+			storeStatus(`Disconnected from peer ${peerId}`);
 			cleanupPeerConnection(peerId);
 			updatePeerList();
 		};
 
 		channel.onmessage = event => {
 			let data_recv = JSON.parse(event.data);
-			displayMessage(data_recv);
+			// displayMessage(data_recv);
 			storeMessage(data_recv);
 		};
 	}
@@ -371,13 +383,22 @@
 	</div>
 	<h3 class="font-semibold mb-2">Messages</h3>
 	<div bind:this={messagesDiv} class="min-h-32 max-h-64 border border-gray-300 overflow-y-auto mb-3 p-3">
-		<!--{#each $msgs as msg}-->
-		<!--	<div class="message">-->
-		<!--		<span class="text-gray-500 text-sm">{new Date(msg.created_at).toLocaleString()}</span>-->
-		<!--		<strong>{msg.sender === `user:${userId}` ? 'You' : msg.sender}</strong>-->
-		<!--		{msg.msg}-->
-		<!--	</div>-->
-		<!--{/each}-->
+		{#each $msgs as msg}
+			{#if msg.type === 'message'}
+			<div class="message">
+				<span class="text-gray-500 text-sm">{new Date(msg.created_at).toLocaleString()}</span>
+				<strong>{msg.sender === `user:${userId}` ? 'You' : msg.sender}</strong>
+				{msg.msg}
+			</div>
+				{:else if msg.type === 'status'}
+				<div class="status text-gray-600 italic text-sm">
+					{msg.msg}
+<!--					<span class="text-gray-500 text-sm">{new Date(msg.created_at).toLocaleString()}</span>-->
+<!--					<strong>{msg.sender === `user:${userId}` ? 'You' : msg.sender}</strong>-->
+					{msg.msg}
+				</div>
+			{/if}
+		{/each}
 	</div>
 	<div class="w-full mb-1 mt-auto">
 		<input type="text" bind:this={messageInput} placeholder="Type a message..." class="flex-grow p-2 border

@@ -12,20 +12,20 @@
 	let { data }: { data: PageData } = $props();
 	siteTitle.set('P2P Chat with Auto-Discovery');
 
-	let ws;
+	let ws: WebSocket;
 	const connections = new Map();
 	const dataChannels = new Map();
 	let pendingCandidates = new Map();
 
-	let local_id: HTMLElement;
 	let messagesDiv: HTMLElement;
 	let peerList: HTMLElement;
 	let messageInput: HTMLElement;
 
 	// let userId = Math.random().toString(36).slice(2, 10);
 	const USER_ID_KEY_IN_LOCAL_STORAGE = 'chat-user-id-v1';
-	let userId = $state();
+	let userId = $state('');
 	let sendingMsg = false;
+	let init_load_time = Date.now();
 
 	if (data.user && data.user.username !== 'guest') {
 		userId = data.user.username;
@@ -96,7 +96,7 @@
 		console.log('displayed message:', obj);
 	}
 
-	function storeStatus(message) {
+	function storeStatus(message: string) {
 		let status_to_store = {
 			id: GeneratePostId(),
 			sender: `user:${userId}`,
@@ -193,7 +193,7 @@
 		};
 	}
 
-	async function initiatePeerConnection(peerId) {
+	async function initiatePeerConnection(peerId: string) {
 		console.log(`Initiating connection to peer ${peerId}`);
 		const peerConnection = new RTCPeerConnection(rtc_peer_conn_config);
 		connections.set(peerId, peerConnection);
@@ -314,7 +314,7 @@
 		};
 	}
 
-	function cleanupPeerConnection(peerId) {
+	function cleanupPeerConnection(peerId: string) {
 		console.log(`Cleaning up connection with peer ${peerId}`);
 		const connection = connections.get(peerId);
 		if (connection) {
@@ -348,9 +348,7 @@
 			peerList.innerHTML = '<div class="p-1 my-0.5">No peers connected</div>';
 		}
 	}
-	let init_load_time = Date.now();
 	onMount(() => {
-		init_load_time = Date.now();
 		if (browser) {
 			// if( !( navigator.getUserMedia || navigator.webkitGetUserMedia ||
 			// 	 navigator.msGetUserMedia) ) {
@@ -359,7 +357,7 @@
 				return
 			}
 			if (!userId) {
-				userId = localStorage.getItem(USER_ID_KEY_IN_LOCAL_STORAGE);
+				userId = localStorage.getItem(USER_ID_KEY_IN_LOCAL_STORAGE) || '';
 				if (!userId) {
 					userId = Math.random().toString(36).slice(2, 10);
 					userId = `Guest-${userId}`;
@@ -377,6 +375,7 @@
 	});
 
 	$effect.pre(() => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		$msgs;
 		const autoscroll = sendingMsg || messagesDiv && messagesDiv.offsetHeight + messagesDiv.scrollTop > messagesDiv.scrollHeight - 50;
 

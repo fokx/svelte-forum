@@ -1,4 +1,9 @@
 <script lang="ts">
+	/*
+	This file is a modification of AI generated code.
+  To learn more about what WebRTC, SDP, PeerConnection, etc. is, take a look at this stackoverflow answer:
+  https://stackoverflow.com/questions/59484802/ice-vs-stun-vs-turn/70059155#70059155
+	 */
 	import { onMount } from 'svelte';
 	import { PUBLIC_STUN_SERVER, PUBLIC_TURN_SERVER, PUBLIC_TURN_SERVER_PASSWORD, PUBLIC_TURN_SERVER_USERNAME, PUBLIC_WS_URL } from '$env/static/public';
 	import { siteTitle } from '$lib/stores';

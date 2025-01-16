@@ -27,7 +27,6 @@
 	import CardList from 'svelte-bootstrap-svg-icons/CardList.svelte';
 	import ChatLeftDots from 'svelte-bootstrap-svg-icons/ChatLeftDots.svelte';
 	import HouseDoor from 'svelte-bootstrap-svg-icons/HouseDoor.svelte';
-	import HouseDoorFill from 'svelte-bootstrap-svg-icons/HouseDoorFill.svelte';
 	import ChevronLeft from 'svelte-bootstrap-svg-icons/ChevronLeft.svelte';
 	import Github from 'svelte-bootstrap-svg-icons/Github.svelte';
 	import PencilSquare from 'svelte-bootstrap-svg-icons/PencilSquare.svelte';
@@ -355,7 +354,7 @@
 		<ChatDots class={BottomNavItemClass} />
 	</BottomNavItem>
 	<BottomNavItem btnName="Home" href="/">
-		<HouseDoorFill class={BottomNavItemClass} />
+		<HouseDoor class={BottomNavItemClass} />
 	</BottomNavItem>
 	<BottomNavItem btnName="New post" href="/compose">
 		<Plus class={BottomNavItemClass} />

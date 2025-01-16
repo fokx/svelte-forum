@@ -7,6 +7,7 @@
 	import { dbb } from '$lib/dbb';
 	import { liveQuery } from 'dexie';
 	import { browser } from '$app/environment';
+	import { tick } from 'svelte';
 
 	let { data }: { data: PageData } = $props();
 	siteTitle.set('P2P Chat with Auto-Discovery');
@@ -346,7 +347,6 @@
 	}
 
 	onMount(() => {
-
 		if (browser) {
 			// if( !( navigator.getUserMedia || navigator.webkitGetUserMedia ||
 			// 	 navigator.msGetUserMedia) ) {
@@ -371,6 +371,18 @@
 			connectToSignalingServer();
 		}
 	});
+
+	$effect.pre(() => {
+		$msgs;
+		const autoscroll = messagesDiv && messagesDiv.offsetHeight + messagesDiv.scrollTop > messagesDiv.scrollHeight - 50;
+
+		if (autoscroll) {
+			tick().then(() => {
+				messagesDiv.scrollTo(0, messagesDiv.scrollHeight);
+			});
+		}
+	});
+
 </script>
 
 <div class="max-w-2xl mx-auto my-0.5 p-5">

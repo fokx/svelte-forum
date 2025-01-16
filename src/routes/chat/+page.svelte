@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { PUBLIC_STUN_SERVER1, PUBLIC_STUN_SERVER2, PUBLIC_WS_URL } from '$env/static/public';
+	import { PUBLIC_STUN_SERVER, PUBLIC_TURN_SERVER, PUBLIC_TURN_SERVER_PASSWORD, PUBLIC_TURN_SERVER_USERNAME, PUBLIC_WS_URL } from '$env/static/public';
 	import { siteTitle } from '$lib/stores';
 	import type { PageData } from './$types';
 	import { GeneratePostId } from '$lib';
@@ -107,20 +107,21 @@
 		};
 		dbb.msgs.add(status_to_store);
 		if (!messagesDiv) return;
-		return
-		const statusElement = document.createElement('div');
-		statusElement.className = 'status text-gray-600 italic';
-		statusElement.textContent = message;
-		messagesDiv.appendChild(statusElement);
-		messagesDiv.scrollTop = messagesDiv.scrollHeight;
+		// return;
+		// const statusElement = document.createElement('div');
+		// statusElement.className = 'status text-gray-600 italic';
+		// statusElement.textContent = message;
+		// messagesDiv.appendChild(statusElement);
+		// messagesDiv.scrollTop = messagesDiv.scrollHeight;
 	}
 
 	const rtc_peer_conn_config = {
 		iceServers: [
-			{ urls: `stun:${PUBLIC_STUN_SERVER1}` },
-			{ urls: `stun:${PUBLIC_STUN_SERVER2}` },
+			{ urls: `stun:${PUBLIC_STUN_SERVER}` },
+			{ urls: `turn:${PUBLIC_TURN_SERVER}`, credential: PUBLIC_TURN_SERVER_PASSWORD, username: PUBLIC_TURN_SERVER_USERNAME },
 			{ urls: 'stun:stun.cloudflare.com:3478' },
-			{ urls: 'stun:stun.l.google.com:19302' }
+			{ urls: 'stun:stun.miwifi.com:3478' },
+			// { urls: 'stun:stun.hitv.com:3478' },
 		]
 	};
 
@@ -411,7 +412,6 @@
 					{msg.msg}
 <!--					<span class="text-gray-500 text-sm">{new Date(msg.created_at).toLocaleString()}</span>-->
 <!--					<strong>{msg.sender === `user:${userId}` ? 'You' : msg.sender}</strong>-->
-					{msg.msg}
 				</div>
 			{/if}
 		{/each}

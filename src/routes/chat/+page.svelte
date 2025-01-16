@@ -348,8 +348,9 @@
 			peerList.innerHTML = '<div class="p-1 my-0.5">No peers connected</div>';
 		}
 	}
-
+	let init_load_time = Date.now();
 	onMount(() => {
+		init_load_time = Date.now();
 		if (browser) {
 			// if( !( navigator.getUserMedia || navigator.webkitGetUserMedia ||
 			// 	 navigator.msGetUserMedia) ) {
@@ -406,7 +407,7 @@
 				<strong>{msg.sender === `user:${userId}` ? 'You' : msg.sender}</strong>
 				{msg.msg}
 			</div>
-				{:else if msg.type === 'status'}
+				{:else if msg.type === 'status' && msg.created_at > init_load_time}
 				<div class="status text-gray-600 italic text-sm">
 					{msg.msg}
 <!--					<span class="text-gray-500 text-sm">{new Date(msg.created_at).toLocaleString()}</span>-->

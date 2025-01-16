@@ -25,6 +25,8 @@
 	// let userId = Math.random().toString(36).slice(2, 10);
 	const USER_ID_KEY_IN_LOCAL_STORAGE = 'chat-user-id-v1';
 	let userId = $state();
+	let sendingMsg = false;
+
 	if (data.user && data.user.username !== 'guest') {
 		userId = data.user.username;
 	}
@@ -54,6 +56,7 @@
 			// displayMessage(to_send);
 			storeMessage(to_send);
 			messageInput.value = '';
+			sendingMsg = true;
 		} else {
 			storeStatus('No connected peers to send message to');
 		}
@@ -374,11 +377,12 @@
 
 	$effect.pre(() => {
 		$msgs;
-		const autoscroll = messagesDiv && messagesDiv.offsetHeight + messagesDiv.scrollTop > messagesDiv.scrollHeight - 50;
+		const autoscroll = sendingMsg || messagesDiv && messagesDiv.offsetHeight + messagesDiv.scrollTop > messagesDiv.scrollHeight - 50;
 
 		if (autoscroll) {
 			tick().then(() => {
 				messagesDiv.scrollTo(0, messagesDiv.scrollHeight);
+				sendingMsg = false;
 			});
 		}
 	});

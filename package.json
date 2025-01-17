@@ -16,14 +16,17 @@
 		"db:push": "drizzle-kit push",
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
-		"import:users": "tsx src/lib/server/db/import-users.ts"
+		"import:users": "tsx src/lib/server/db/import-users.ts",
+		"tauri": "tauri"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.49.1",
 		"@sveltejs/adapter-auto": "^3.3.1",
+		"@sveltejs/adapter-static": "^3.0.8",
 		"@sveltejs/kit": "^2.15.1",
 		"@sveltejs/vite-plugin-svelte": "^4.0.4",
 		"@tailwindcss/typography": "^0.5.15",
+		"@tauri-apps/cli": "^2.2.4",
 		"@types/better-sqlite3": "^7.6.12",
 		"@types/eslint": "^9.6.1",
 		"autoprefixer": "^10.4.20",
@@ -73,6 +76,8 @@
 		"webtorrent": "^2.5.12",
 		"ws": "^8.18.0",
 		"y-websocket": "2.0.4",
-		"yjs": "13.6.20"
+		"yjs": "13.6.20",
+		"@tauri-apps/api": "^2",
+		"@tauri-apps/plugin-opener": "^2"
 	}
 }

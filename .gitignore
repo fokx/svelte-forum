@@ -25,3 +25,10 @@ vite.config.ts.timestamp-*
 *.db
 
 msc/private/*
+/package
+.DS_Store
+
+# tauri
+# will have schema files for capabilities auto-completion
+src-tauri/gen
+src-tauri/target

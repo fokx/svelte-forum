@@ -17,7 +17,10 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"import:users": "tsx src/lib/server/db/import-users.ts",
-		"tauri": "tauri"
+		"tauri": "tauri",
+		"tauri-build-apk": "tauri android build --apk --target aarch64",
+		"tauri-build-apk-all": "tauri android build --apk",
+		"tauri-build": "tauri build"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.49.1",

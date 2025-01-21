@@ -1,5 +1,20 @@
 ## Forum App under dev
 
+dev
+```sh
+# normal dev
+pnpm dev
+# tauri dev
+pnpm tauri dev
+# tauri android dev, require Android device plugged-in, ensure port 1420/tcp open in firewall
+pnpm tauri android dev
+```
+
+when building AppImage, use `NO_STRIP=true pnpm tauri-build` to avoid this error:
+(See https://github.com/linuxdeploy/linuxdeploy/issues/272)
+
+> build appimage fail on linuxdeploy archlinux
+
 
 
 ```Caddyfile
@@ -23,7 +38,7 @@ header Access-Control-Allow-Origin http://127.0.0.1:5173
 ```
 
 ```zsh
-#!/bin/zsh
+#!/bin/zshw
 host=mnz
 rsync -av --delete /f/svelte-forum $host:/srv/ --exclude={"*.db",".env","node_modules/*","build/*",".svelte-kit/*"}
 ssh $host chown -R discourse:discourse /srv/svelte-forum
@@ -117,3 +132,4 @@ should scroll down a little bit, and focus on the composer.
 https://svelte-5-ui-lib.codewithshin.com/components/timeline
 
 [ ] Darkmode toggle: add 'follow-system' option
+

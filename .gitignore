@@ -32,3 +32,4 @@ msc/private/*
 # will have schema files for capabilities auto-completion
 src-tauri/gen
 src-tauri/target
+src-tauri/gen/android/keystore.properties

@@ -1,7 +1,5 @@
 ## Forum App under dev
 
-
-
 ```Caddyfile
 host:443 {
         reverse_proxy * 127.0.0.1:4002

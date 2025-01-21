@@ -189,28 +189,28 @@
 				<NavBrand
 					siteName={truncate_title($currentSiteTitle, 12) + ` - ${PUBLIC_SITE_TITLE}`}
 					spanClass="text-xs">
-					<img width="15" src="/images/svelte-icon.png" alt="site icon" />
+					<img width="15" src="/images/site-icon.webp" alt="site icon" />
 				</NavBrand>
 			</div>
 			<div class="hidden sm:max-md:block">
 				<NavBrand
 					siteName={truncate_title($currentSiteTitle, 15) + ` - ${PUBLIC_SITE_TITLE}`}
 					spanClass="sm:text-xs">
-					<img width="15" src="/images/svelte-icon.png" alt="site icon" />
+					<img width="15" src="/images/site-icon.webp" alt="site icon" />
 				</NavBrand>
 			</div>
 			<div class="hidden md:max-lg:block">
 				<NavBrand
 					siteName={truncate_title($currentSiteTitle, 22) + ` - ${PUBLIC_SITE_TITLE}`}
 					spanClass="md:text-base">
-					<img width="15" src="/images/svelte-icon.png" alt="site icon" />
+					<img width="15" src="/images/site-icon.webp" alt="site icon" />
 				</NavBrand>
 			</div>
 			<div class="hidden lg:block">
 				<NavBrand
 					siteName={truncate_title($currentSiteTitle, 45) + ` - ${PUBLIC_SITE_TITLE}`}
 					spanClass="lg:text-lg">
-					<img width="15" src="/images/svelte-icon.png" alt="site icon" />
+					<img width="15" src="/images/site-icon.webp" alt="site icon" />
 				</NavBrand>
 			</div>
 		{/snippet}

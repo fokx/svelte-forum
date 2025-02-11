@@ -40,12 +40,12 @@ export function display_time(d) {
 }
 
 export async function post_url(url: string, body: string) {
-	const dbdc = await dbb.cache.toCollection().last();
+	const dbbcache = await dbb.cache.toCollection().last();
 
 	const headers = {
 		'Content-Type': 'application/json',
-		'Api-Key': dbdc.api_key,
-		'Api-Username': encodeURIComponent(dbdc.api_username)
+		'Api-Key': dbbcache.api_key,
+		'Api-Username': encodeURIComponent(dbbcache.api_username)
 	};
 
 	const response = await window.fetch(urlJoin(PUBLIC_DISCOURSE_HOST, url), {
@@ -58,15 +58,20 @@ export async function post_url(url: string, body: string) {
 }
 
 export async function get_url(url: string, params = {}) {
-	const dbdc = await dbb.cache.toCollection().last();
+	const dbbcache = await dbb.cache.toCollection().last();
 	const u = new URL(urlJoin(PUBLIC_DISCOURSE_HOST, url));
 	u.search = new URLSearchParams(params);
-	const response = await fetch(u, {
-		headers: {
-			'Api-Key': dbdc.api_key,
-			'Api-Username': encodeURIComponent(dbdc.api_username)
-		}
-	});
+	let response;
+	if (!dbbcache || dbbcache.api_key === undefined) {
+		response = await fetch(u);
+	} else {
+		 response = await fetch(u, {
+			headers: {
+				'Api-Key': dbbcache.api_key,
+				'Api-Username': encodeURIComponent(dbbcache.api_username)
+			}
+		});
+	}
 	return response;
 }
 

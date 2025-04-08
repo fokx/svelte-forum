@@ -51,8 +51,6 @@
 {:then error}
 	Loading...
 	<Spinner class="me-3" size="4" color="teal" />
-<!--	<p style="color: mediumpurple">Error loading topic by its Discourse ID: {error}</p>-->
-	<!--	<Topic post={topic} />-->
 {:catch error}
 	<p style="color: red">Error loading topic by its Discourse ID: {error}</p>
 {/await}

@@ -1,46 +1,26 @@
-import type { Handle } from '@sveltejs/kit'; // import * as auth from '$lib/server/auth.js';
-import { ReadDiscourseUser } from '$lib/server/discourse';
-import { DISCOURSE_COOKIE_NAME } from '$env/static/private';
-import { eq } from 'drizzle-orm';
-import { CreateDiscourseUserApiKeyAndReturnKey } from './lib/server/discourse';
-import { dbs } from '$lib/server/db';
-import { discourse_api_keys } from '$lib/server/db/schema';
+import type { Handle } from '@sveltejs/kit';
+import * as auth from '$lib/server/auth.js';
 
-export const handle: Handle = async ({ event, resolve }) => {
-	if (!event.locals.user) {
-		const ext_cookie = event.cookies.get(DISCOURSE_COOKIE_NAME);
+const handleAuth: Handle = async ({ event, resolve }) => {
+	const sessionToken = event.cookies.get(auth.sessionCookieName);
 
-		// assert `user` is always not null
-		// if not logged-in, the user will be 'guest' user
-		const user = await ReadDiscourseUser(ext_cookie);
-
-		if (user.username === 'guest') {
-			// when a user logs out, local `api_key` shall be removed
-			event.locals.api_key = undefined;
-		}
-		// after a new user logs in, local `api_key` will be updated
-		if (
-			(event.locals.user && event.locals.user.id !== user.id) ||
-			event.locals.api_key === undefined
-		) {
-			const result = await dbs
-				.select()
-				.from(discourse_api_keys)
-				// TODO: add notnull filter
-				.where(eq(discourse_api_keys.user_id, user.id))
-				.limit(1);
-			let key: string;
-			if (result.length) {
-				key = result[0].key;
-			} else {
-				// no api key found in application db, create one
-				// as this is done on server, this should be fast
-				// TODO: check how this affects performance in real world.
-				key = await CreateDiscourseUserApiKeyAndReturnKey(user);
-			}
-			event.locals.api_key = key;
-		}
-		event.locals.user = user;
+	if (!sessionToken) {
+		event.locals.user = null;
+		event.locals.session = null;
+		return resolve(event);
 	}
+
+	const { session, user } = await auth.validateSessionToken(sessionToken);
+
+	if (session) {
+		auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
+	} else {
+		auth.deleteSessionTokenCookie(event);
+	}
+
+	event.locals.user = user;
+	event.locals.session = session;
 	return resolve(event);
 };
+
+export const handle: Handle = handleAuth;

@@ -81,7 +81,6 @@
 	}
 
 
-
 	function handleDeleteLocalCategories() {
 		showLoading = true;
 		dbb.categories.clear().then(() => {
@@ -118,7 +117,7 @@
 	}
 
 	const userinfo = structuredClone(data.user);
-	userinfo['api_key[:4]'] = data.api_key.slice(0, 4);
+	// userinfo['api_key[:4]'] = data.api_key.slice(0, 4);
 </script>
 <div>
 	<Heading tag="h1" class="text-primary-700 dark:text-primary-500 text-xl">
@@ -162,7 +161,7 @@
 		</Button>
 	</div>
 
-	<Hr hrClass="my-8 max-w-5xl h-1" icon>
+	<Hr hrClass="my-8 max-w-5xl h-1">
 		<StarFill class="w-4 h-4 text-gray-700 dark:text-gray-300" />
 	</Hr>
 
@@ -170,12 +169,16 @@
 		User info
 	</Heading>
 	<List tag="dl" class="divide-y divide-gray-200 text-gray-900 dark:divide-gray-700  dark:text-white">
-		{#each Object.entries(userinfo) as [key, value]}
-			<div class="flex flex-col pb-3">
-				<DescriptionList tag="dt" class="mb-1">{key}</DescriptionList>
-				<DescriptionList tag="dd">{value}</DescriptionList>
-			</div>
-		{/each}
+		{#if userinfo}
+			{#each Object.entries(userinfo) as [key, value]}
+				<div class="flex flex-col pb-3">
+					<DescriptionList tag="dt" class="mb-1">{key}</DescriptionList>
+					<DescriptionList tag="dd">{value}</DescriptionList>
+				</div>
+			{/each}
+		{:else}
+			<p class="text-gray-900 dark:text-white center-align">No user info found</p>
+		{/if}
 	</List>
 
 </div>

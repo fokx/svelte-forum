@@ -22,7 +22,6 @@ https://dexie.org/cloud/docs/best-practices#examples-primary-keys
 dbb.version(4).stores({
 	posts: '&id, main_post_id, topic_id, post_number, reply_to_post_number, last_posted_at, reply_to_post_id, synced_at', //[topic_id+post_number],[topic_id+reply_to_post_number],
 	users: '&id, username',
-	discourse_api_keys: '&id, user_id',
 	categories: '&id, name, slug',
 	draft_cache: '&url',
 	cache: '++, api_username, api_key',

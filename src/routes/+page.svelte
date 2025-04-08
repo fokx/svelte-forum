@@ -70,13 +70,13 @@
 		<Spinner class="me-3" size="4" color="teal" />
 	</p>
 {/snippet}
-{#await load_or_fetch_latest_topics()}
+<!--{#await load_or_fetch_latest_topics()}-->
 	<!--{@render loading('Updating latest topics')}-->
 <!--{:then topics}-->
 <!--	<p>Last updated at {last_updated_date.toLocaleString()}</p>-->
 <!--{:catch error}-->
 <!--	<p style="color: red">Error loading latest topics: {error.message}</p>-->
-{/await}
+<!--{/await}-->
 
 {#if loading_new_page}
 	{@render loading(`Fetching new topics on page ${page_to_fetch}`)}

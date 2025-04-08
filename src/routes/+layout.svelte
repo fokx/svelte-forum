@@ -34,10 +34,9 @@
 	import PersonFill from 'svelte-bootstrap-svg-icons/PersonFill.svelte';
 	import Plus from 'svelte-bootstrap-svg-icons/Plus.svelte';
 	import Sliders2Vertical from 'svelte-bootstrap-svg-icons/Sliders2Vertical.svelte';
-	import { assemble_avatar_full_url } from '$lib';
 	import { dbb } from '$lib/dbb';
 	import { onMount } from 'svelte';
-	import { PUBLIC_DISCOURSE_HOST, PUBLIC_SITE_TITLE } from '$env/static/public';
+	import {  PUBLIC_SITE_TITLE } from '$env/static/public';
 	import { browser } from '$app/environment';
 	import { liveQuery } from 'dexie';
 	import { siteTitle } from '$lib/stores'; // Import the store
@@ -55,7 +54,6 @@
 
 	let { children, data } = $props();
 	let activeUrl = $state(page.url.pathname);
-	let westUrl = $state(PUBLIC_DISCOURSE_HOST);
 	let nav = uiHelpers();
 	let dropdownUser = uiHelpers();
 	let dropdownUserStatus = $state(false);
@@ -71,11 +69,6 @@
 		dropdownUserStatus = dropdownUser.isOpen;
 		activeUrl = page.url.pathname;
 		isDemoOpen = demoSidebarUi.isOpen;
-		if (page.url.pathname.startsWith('/t/')) {
-			westUrl = new URL(urlJoin(PUBLIC_DISCOURSE_HOST, 't_external_id_redir', page.url.pathname.split('/').at(-1)) + '.json').toString();
-		} else {
-			westUrl = PUBLIC_DISCOURSE_HOST;
-		}
 	});
 
 	function toggleDarkMode(event) {
@@ -85,11 +78,11 @@
 	}
 
 	async function init_dbd_cache() {
-		let dbbcache = await dbb.cache.toCollection().last();
-		if (!dbbcache || dbbcache.api_key !== data.api_key) {
-			await dbb.cache.clear();
-			await dbb.cache.add({ api_key: data.api_key, api_username: data.user.username });
-		}
+		// let dbbcache = await dbb.cache.toCollection().last();
+		// if (!dbbcache || dbbcache.api_key !== data.api_key) {
+		// 	await dbb.cache.clear();
+		// 	await dbb.cache.add({ api_key: data.api_key, api_username: data.user.username });
+		// }
 	}
 
 	onMount(async () => {
@@ -233,14 +226,8 @@
 					Flat View
 				</Toggle>
 			</div>
-			<div class="order-2">
-				<a href={westUrl}>
-					<ChevronLeft />
-				</a>
-			</div>
 			<div class="flex items-center space-x-1 order-5">
 				<Avatar class="rotate-360 me-1 ms-3" onclick={dropdownUser.toggle}
-								src={assemble_avatar_full_url(data.user?.avatar_template)}
 								dot={{ color: "green" }} />
 				<div class="relative">
 					<Dropdown dropdownStatus={dropdownUserStatus} closeDropdown={closeDropdownUser}
@@ -276,7 +263,7 @@
 		{/snippet}
 		<!--only show NavUl on desktop, no NavHamburger on mobile-->
 		<NavUl class="order-1 me-1 ms-1 hidden" {activeUrl}>
-			<NavLi href={westUrl}>
+			<NavLi href={githubURL}>
 				<ChevronLeft />
 			</NavLi>
 		</NavUl>
@@ -347,7 +334,7 @@
 	<!--        <BottomNavHeaderItem itemName="Following"/>-->
 	<!--    </BottomNavHeader>-->
 	<!--{/snippet}-->
-	<BottomNavItem btnName="West" href={westUrl}>
+	<BottomNavItem btnName="West" href={"/"}>
 		<ChevronLeft class={BottomNavItemClass} />
 	</BottomNavItem>
 	<BottomNavItem btnName="Chat" href="/chat">

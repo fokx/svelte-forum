@@ -1,7 +1,5 @@
 import urlJoin from 'url-join';
 import {
-	PUBLIC_AVATAR_DEFAULT_URL,
-	PUBLIC_DISCOURSE_HOST,
 	PUBLIC_POST_ID_LENGTH
 } from '$env/static/public';
 import { dbb } from '$lib/dbb';
@@ -17,6 +15,10 @@ import EmojiConvertor from 'emoji-js';
 const emoji = new EmojiConvertor();
 emoji.replace_mode = 'unified';
 emoji.img_set = 'google'; // this line seems to have no effect, see https://github.com/iamcal/emoji-data
+
+export function assemble_avatar_full_url(any){
+	return ''
+}
 
 function generateRandomString(length: number) {
 	let result = '';
@@ -48,7 +50,7 @@ export async function post_url(url: string, body: string) {
 		'Api-Username': encodeURIComponent(dbbcache.api_username)
 	};
 
-	const response = await window.fetch(urlJoin(PUBLIC_DISCOURSE_HOST, url), {
+	const response = await window.fetch(urlJoin(url), {
 		headers: headers,
 		body: body,
 		method: 'POST'
@@ -59,7 +61,7 @@ export async function post_url(url: string, body: string) {
 
 export async function get_url(url: string, params = {}) {
 	const dbbcache = await dbb.cache.toCollection().last();
-	const u = new URL(urlJoin(PUBLIC_DISCOURSE_HOST, url));
+	const u = new URL(urlJoin(url));
 	u.search = new URLSearchParams(params);
 	let response;
 	if (!dbbcache || dbbcache.api_key === undefined) {
@@ -73,17 +75,6 @@ export async function get_url(url: string, params = {}) {
 		});
 	}
 	return response;
-}
-
-export function assemble_avatar_full_url(avatar_template: string) {
-	if (avatar_template === undefined || avatar_template === null || avatar_template === '') {
-		return PUBLIC_AVATAR_DEFAULT_URL;
-	}
-	if (avatar_template.includes('{size}')) {
-		return urlJoin(PUBLIC_DISCOURSE_HOST, avatar_template.replace('{size}', '288'));
-	} else {
-		return urlJoin(PUBLIC_DISCOURSE_HOST, avatar_template);
-	}
 }
 
 export interface DiscourseUser {
@@ -393,9 +384,6 @@ export function process_cooked(cooked: string) {
 	cooked = cooked.replaceAll(`<span class="chcklst-box fa fa-square-o fa-fw">`,html_unchecked_square+`<span class="chcklst-box unchecked">`);
 	// console.log(cooked);
 	// const dom = htmlparser2.parseDocument(cooked);
-	cooked = cooked.replaceAll('"/uploads/short-url/', `"${PUBLIC_DISCOURSE_HOST}/uploads/short-url/`)
-	cooked = cooked.replaceAll('"/letter_avatar_proxy/', `"${PUBLIC_DISCOURSE_HOST}/letter_avatar_proxy/`)
-	cooked = cooked.replaceAll('"/user_avatar/', `"${PUBLIC_DISCOURSE_HOST}/user_avatar/`)
 	return cooked
 
 	// const preElements = domutils.findAll((elem) => elem.tagName === 'pre', dom.children);

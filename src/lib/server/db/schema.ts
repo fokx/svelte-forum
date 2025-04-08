@@ -1,5 +1,5 @@
 import { integer, sqliteTable, sqliteView, text } from 'drizzle-orm/sqlite-core';
-import { eq, relations } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -29,6 +29,7 @@ const common_timestamps = {
 export const users = sqliteTable('users', {
 	id: integer('id').primaryKey().notNull(),
 	username: text('username',).notNull().unique(),
+	passwordHash: text('password_hash').notNull(),
 	name: text('name'),
 	admin: integer('admin', { mode: 'boolean' }).notNull(),
 	staged: integer('staged', { mode: 'boolean' }).notNull(),
@@ -44,25 +45,6 @@ export const users = sqliteTable('users', {
 	updated_at: integer('updated_at', { mode: 'timestamp' })
 });
 
-export const discourseUserRelations = relations(users, ({ many }) => ({
-	api_keys: many(discourse_api_keys),
-	posts: many(posts)
-}));
-
-export const discourse_api_keys = sqliteTable('discourse_api_keys', {
-	id: integer('id').primaryKey().notNull(),
-	// TODO: populate users table from discourse. the user may not exist when insert into this table
-	// user_id: integer('user_id').references(() => users.id),
-	user_id: integer('user_id'),
-	key: text('key').notNull(),
-	truncated_key: text('truncated_key'),
-	description: text('description'),
-	last_used_at: integer('last_used_at', { mode: 'timestamp' }),
-	created_at: integer('created_at', { mode: 'timestamp' }),
-	updated_at: integer('updated_at', { mode: 'timestamp' }),
-	revoked_at: integer('revoked_at', { mode: 'timestamp' }),
-	api_key_scopes: text('api_key_scopes')
-});
 
 export const posts = sqliteTable('posts', {
 	id: text('id')
@@ -87,10 +69,19 @@ export const posts = sqliteTable('posts', {
 	...common_timestamps
 });
 
+export const sessions = sqliteTable('session', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => users.id),
+	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull()
+});
+
+export type Session = typeof sessions.$inferSelect;
+
 export const topics_view = sqliteView('topics_view').as((qb) =>
 	qb.select().from(posts).where(eq(posts.is_main_post, true))
 );
 
 export type User = typeof users.$inferSelect;
 
-export type DiscourseApiKey = typeof discourse_api_keys.$inferSelect;

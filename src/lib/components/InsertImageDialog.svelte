@@ -1,16 +1,17 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
+  import {run} from 'svelte/legacy';
 
-  import {onMount} from 'svelte';
+  import {onMount, tick} from 'svelte';
   import {
     CloseCircleButton,
     InsertImageUploadedDialogBody,
     ModalDialog,
     type ImagePayload,
-    getCommands,
     InsertImageUriDialogBody,
     getActiveEditor,
     getEditor,
+    InsertImage,
+    FocusEditor,
   } from 'svelte-lexical';
 
   import landscapeImage from './images/landscape.jpg';
@@ -20,7 +21,7 @@
     showModal?: boolean;
   }
 
-  let { showModal = $bindable(false) }: Props = $props();
+  let {showModal = $bindable(false)}: Props = $props();
   export function open() {
     showModal = true;
   }
@@ -31,6 +32,7 @@
       mode = null;
     }
   });
+
   let hasModifier = $state(false);
 
   const editor = getEditor();
@@ -48,13 +50,14 @@
   });
 
   function insertAndClose(payload: ImagePayload) {
-    getCommands().InsertImage.execute($activeEditor, payload);
+    InsertImage($activeEditor, payload);
     closeDialog();
   }
 
-  function closeDialog() {
+  async function closeDialog() {
     showModal = false;
-    getCommands().FocusEditor.execute(editor);
+    await tick();
+    FocusEditor(editor);
   }
 </script>
 

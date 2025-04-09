@@ -3,13 +3,13 @@ import { encodeBase32LowerCase } from '@oslojs/encoding';
 import { fail, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import * as auth from '$lib/server/auth';
-import { db } from '$lib/server/db';
+import { dbs } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
-		return redirect(302, '/lucia');
+		return redirect(302, '/');
 	}
 	return {};
 };
@@ -21,15 +21,16 @@ export const actions: Actions = {
 		const password = formData.get('password');
 
 		if (!validateUsername(username)) {
-			return fail(400, {
-				message: 'Invalid username (min 3, max 31 characters, alphanumeric only)'
-			});
+			return fail(400, { message: 'Invalid username (min 3, max 31 characters, alphanumeric only)' });
 		}
 		if (!validatePassword(password)) {
 			return fail(400, { message: 'Invalid password (min 6, max 255 characters)' });
 		}
 
-		const results = await db.select().from(table.users).where(eq(table.users.username, username));
+		const results = await dbs
+			.select()
+			.from(table.users)
+			.where(eq(table.users.username, username));
 
 		const existingUser = results.at(0);
 		if (!existingUser) {
@@ -40,7 +41,7 @@ export const actions: Actions = {
 			memoryCost: 19456,
 			timeCost: 2,
 			outputLen: 32,
-			parallelism: 1
+			parallelism: 1,
 		});
 		if (!validPassword) {
 			return fail(400, { message: 'Incorrect username or password' });
@@ -50,7 +51,7 @@ export const actions: Actions = {
 		const session = await auth.createSession(sessionToken, existingUser.id);
 		auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
 
-		return redirect(302, '/lucia');
+		return redirect(302, '/');
 	},
 	register: async (event) => {
 		const formData = await event.request.formData();
@@ -70,20 +71,20 @@ export const actions: Actions = {
 			memoryCost: 19456,
 			timeCost: 2,
 			outputLen: 32,
-			parallelism: 1
+			parallelism: 1,
 		});
 
 		try {
-			await db.insert(table.users).values({ id: userId, username, passwordHash });
+			await dbs.insert(table.users).values({ id: userId, username, passwordHash });
 
 			const sessionToken = auth.generateSessionToken();
 			const session = await auth.createSession(sessionToken, userId);
 			auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
 		} catch (e) {
-			return fail(500, { message: 'An error has occurred' });
+			return fail(500, { message: `An error has occurred: ${e}` });
 		}
-		return redirect(302, '/lucia');
-	}
+		return redirect(302, '/');
+	},
 };
 
 function generateUserId() {
@@ -103,5 +104,9 @@ function validateUsername(username: unknown): username is string {
 }
 
 function validatePassword(password: unknown): password is string {
-	return typeof password === 'string' && password.length >= 6 && password.length <= 255;
+	return (
+		typeof password === 'string' &&
+		password.length >= 6 &&
+		password.length <= 255
+	);
 }

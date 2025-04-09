@@ -9,7 +9,7 @@ import type { DiscourseUser } from '$lib';
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	let cloud_posts, cloud_users;
 	const user = locals.user;
-	const not_logged_in = '/lucia';
+	const not_logged_in = '/';
 	// if (user && url.pathname === not_logged_in) {
 	// 	return redirect(302, '/');
 	// }

@@ -7,7 +7,6 @@
 	import { liveQuery } from 'dexie';
 	import { onMount, tick } from 'svelte';
 
-	let { data }: { data: PageData } = $props();
 	let latest_topics = liveQuery(() =>
 		dbb.posts.orderBy('last_posted_at').filter(p => p.post_number === 1).desc().toArray()
 	);
@@ -62,7 +61,18 @@
 	};
 
 
+	import { enhance } from '$app/forms';
+	import type { PageServerData } from './$types';
+
+	let { data }: { data: PageServerData } = $props();
 </script>
+
+<h1>Hi, {data.user.username}!</h1>
+<p>Your user ID is {data.user.id}.</p>
+<form method="post" action="?/logout" use:enhance>
+	<button>Sign out</button>
+</form>
+
 
 {#snippet loading(text = 'loading')}
 	<p>

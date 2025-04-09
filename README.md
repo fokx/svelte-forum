@@ -11,7 +11,6 @@ host:443 {
                 reverse_proxy @websockets 127.0.0.1:4021
         }
 }
-
 ```
 
 ```
@@ -33,13 +32,12 @@ pnpx tsx src/lib/server/discovery-server.ts
 host=hk
 rsync -av --delete /f/svelte-5-ui-lib $host:/srv/ --exclude={"*.db",".env","node_modules/*"}
 ssh $host chown -R discourse:discourse /srv/svelte-5-ui-lib
-cd /srv/svelte-5-ui-lib; pnpm i && pnpm build && pnpm package
+cd ../svelte-5-ui-lib; pnpm i && pnpm build && pnpm package
 
 host=hk
 rsync -av --delete /f/svelte-lexical $host:/srv/ --exclude={"*.db",".env","node_modules/*"}
 ssh $host chown -R discourse:discourse /srv/svelte-lexical
 cd /srv/svelte-lexical; pnpm i; cd packages/svelte-lexical; pnpm build
-
 ```
 
 ```
